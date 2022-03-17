@@ -60,6 +60,7 @@ func TestYaml2(t *testing.T) {
 	type configTest struct {
 		Name string
 		Body string
+		Age  int32
 	}
 	type testBody struct {
 		Code  string
