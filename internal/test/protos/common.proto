@@ -1,0 +1,11 @@
+syntax = "proto3";
+package protos;
+option go_package = "github.com/lpxxn/grpc_demo/protos";
+option java_package = "com.proto";
+
+
+message Result {
+  string code = 1;
+  string desc = 2;
+  bytes data = 3;
+}

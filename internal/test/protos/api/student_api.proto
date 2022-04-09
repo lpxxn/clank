@@ -1,0 +1,25 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/lpxxn/grpc_demo/protos/api";
+option java_package = "com.proto.api";
+
+import "protos/common.proto";
+import "protos/model/students.proto";
+import "google/protobuf/empty.proto";
+
+
+service StudentSrv {
+  rpc NewStudent(model.Student) returns (protos.Result);
+  rpc StudentByID(QueryStudent) returns (QueryStudentResponse);
+
+  rpc AllStudent(google.protobuf.Empty) returns(stream QueryStudentResponse);
+  rpc StudentInfo(stream QueryStudent) returns(stream QueryStudentResponse);
+}
+
+message QueryStudent {
+  int64 id = 1;
+}
+
+message QueryStudentResponse {
+  repeated model.Student studentList = 1;
+}

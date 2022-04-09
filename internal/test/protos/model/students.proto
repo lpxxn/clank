@@ -1,0 +1,19 @@
+syntax = "proto3";
+package model;
+option go_package = "github.com/lpxxn/grpc_demo/protos/model";
+option java_package = "com.proto.model";
+
+message Student {
+  int64 id = 1;
+  string name = 2;
+  int32 age = 3;
+}
+
+message StudentList {
+  string class = 1;
+  repeated Student students = 2;
+  string teacher = 3;
+  repeated int64 score = 4;
+}
+
+//protos.Result a = 4;
