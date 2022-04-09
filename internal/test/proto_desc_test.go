@@ -7,9 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+/*
+https://github.com/jhump/protoreflect
+*/
+
+// parse proto
 func TestDynamicProto(t *testing.T) {
 	//fileDescriptors := []*desc.FileDescriptor{}
-	parser := protoparse.Parser{
+	parser := &protoparse.Parser{
 		ImportPaths: []string{"./"},
 	}
 	fileDescriptors, err := parser.ParseFiles("protos/common.proto",
@@ -17,4 +22,5 @@ func TestDynamicProto(t *testing.T) {
 		"protos/api/student_api.proto")
 	assert.Nil(t, err)
 	t.Logf("fileDescriptors: %v", fileDescriptors)
+
 }
