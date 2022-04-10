@@ -17,10 +17,27 @@ func TestDynamicProto(t *testing.T) {
 	parser := &protoparse.Parser{
 		ImportPaths: []string{"./"},
 	}
-	fileDescriptors, err := parser.ParseFiles("protos/common.proto",
+	//t.Log(desc.ResolveImport("protos/common.proto"))
+	fileDescriptors, err := parser.ParseFiles(
 		"protos/model/students.proto",
-		"protos/api/student_api.proto")
+		"protos/api/student_api.proto",
+		"protos/common.proto")
 	assert.Nil(t, err)
 	t.Logf("fileDescriptors: %v", fileDescriptors)
+
+	for _, fileDesc := range fileDescriptors {
+		t.Logf("===============\nfileDesc: %v", fileDesc)
+		t.Logf("package: %s, gopackage: %s", fileDesc.GetPackage(), fileDesc.AsFileDescriptorProto().GetOptions().GetGoPackage())
+		for _, msgDesc := range fileDesc.GetMessageTypes() {
+			t.Logf("msgDesc: %v", msgDesc)
+		}
+		for _, servDesc := range fileDesc.GetServices() {
+			t.Logf("service info: %v", servDesc)
+			t.Logf("service name: %s", servDesc.GetName())
+			for _, methodInfo := range servDesc.GetMethods() {
+				t.Logf("methods %+v", methodInfo)
+			}
+		}
+	}
 
 }

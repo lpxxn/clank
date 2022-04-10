@@ -1,6 +1,6 @@
 syntax = "proto3";
 package api;
-option go_package = "github.com/lpxxn/grpc_demo/protos/api";
+option go_package = "github.com/lpxxn/clank/internal/test/protos/api";
 option java_package = "com.proto.api";
 
 import "protos/common.proto";
