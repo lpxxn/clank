@@ -112,6 +112,7 @@ func TestRpcClient(t *testing.T) {
 	result, err := client.NewStudent(context.Background(), &model.Student{
 		Name: "test",
 	})
+
 	if err != nil {
 		t.Fatal(err)
 	}
