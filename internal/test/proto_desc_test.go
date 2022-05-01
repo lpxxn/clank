@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"testing"
 
 	"github.com/jhump/protoreflect/desc"
@@ -21,19 +22,37 @@ import (
 /*
 https://github.com/jhump/protoreflect
 */
-const testAdd = ":54312"
+
+const testPort int = 54312
+
+var (
+	testAddress = fmt.Sprintf(":%d", testPort)
+)
 
 // parse proto
 func TestDynamicProto(t *testing.T) {
 	//fileDescriptors := []*desc.FileDescriptor{}
+	goPath, ok := os.LookupEnv("GOPATH")
+	if !ok {
+		t.Error("GOPATH not found")
+		return
+	}
+	goPath += "/src"
 	parser := &protoparse.Parser{
-		ImportPaths: []string{"./"},
+		ImportPaths: []string{"./", goPath}, //goPath,
+
 	}
 	//t.Log(desc.ResolveImport("protos/common.proto"))
 	fileDescriptors, err := parser.ParseFiles(
-		"protos/model/students.proto",
+		//"protos/model/students.proto",
 		"protos/api/student_api.proto",
-		"protos/common.proto")
+		//"protos/common.proto"
+	)
+	if err, ok := err.(protoparse.ErrorWithPos); ok {
+		t.Log(err.GetPosition())
+		t.Log(err.Error())
+	}
+	t.Log(err)
 	assert.Nil(t, err)
 	t.Logf("fileDescriptors: %v", fileDescriptors)
 
@@ -53,6 +72,10 @@ func TestDynamicProto(t *testing.T) {
 			t.Logf("service name: %s", servDesc.GetName())
 			for _, methodInfo := range servDesc.GetMethods() {
 				t.Logf("methods %+v", methodInfo)
+				input := methodInfo.GetInputType()
+				t.Log(input)
+				output := methodInfo.GetOutputType()
+				t.Log(output)
 			}
 		}
 		CreateServiceDesc(fileDesc)
@@ -94,7 +117,7 @@ func CreateServiceDesc(fileDesc *desc.FileDescriptor) {
 		grpcServ := grpc.NewServer()
 		grpcServ.RegisterService(&serviceDesc, nil)
 
-		listener, err := net.Listen("tcp", testAdd)
+		listener, err := net.Listen("tcp", testAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -104,7 +127,7 @@ func CreateServiceDesc(fileDesc *desc.FileDescriptor) {
 }
 
 func TestRpcClient(t *testing.T) {
-	conn, err := grpc.Dial(testAdd, grpc.WithInsecure())
+	conn, err := grpc.Dial(testAddress, grpc.WithInsecure())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +139,16 @@ func TestRpcClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	t.Log(result)
+	out := map[string]interface{}{}
+	err = conn.Invoke(context.Background(), "/api.StudentSrv/NewStudent", map[string]string{"name": "test"}, out)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(out)
+
 }
 
 var unaryMethodMap map[string]map[string]grpc.MethodDesc = make(map[string]map[string]grpc.MethodDesc)
