@@ -12,13 +12,13 @@ import (
 
 type gRpcServer struct {
 	// map[serverName]map[methodName]methodDesc
-	unaryMethodMap map[string]map[string]grpc.MethodDesc
-	rpcServiceDesc *gRpcServiceDesc
+	unaryMethodMap      map[string]map[string]grpc.MethodDesc
+	streamMethodMap     map[string]map[string]grpc.StreamDesc
+	rpcServiceDescGroup []*gRpcServiceDesc
 }
 
 type gRpcServiceDesc struct {
 	*grpc.ServiceDesc
-	isStream bool
 }
 
 func NewGRpcServer() *gRpcServer {
@@ -27,9 +27,9 @@ func NewGRpcServer() *gRpcServer {
 	}
 }
 
-func (g *gRpcServer) ExtractMethods(fileDesc *desc.FileDescriptor) {
+func (g *gRpcServer) extractMethods(fileDesc *desc.FileDescriptor) {
 	for _, servDescriptor := range fileDesc.GetServices() {
-		g.rpcServiceDesc = g.methodDesc(servDescriptor)
+		g.rpcServiceDescGroup = append(g.rpcServiceDescGroup, g.methodDesc(servDescriptor))
 	}
 }
 
@@ -39,8 +39,9 @@ func (g *gRpcServer) methodDesc(servDescriptor *desc.ServiceDescriptor) *gRpcSer
 			ServiceName: servDescriptor.GetFullyQualifiedName(),
 			Metadata:    servDescriptor.GetFile().GetName(),
 		},
-		isStream: false,
 	}
+	g.unaryMethodMap[rev.ServiceName] = make(map[string]grpc.MethodDesc)
+	g.streamMethodMap[rev.ServiceName] = make(map[string]grpc.StreamDesc)
 	for _, methodDescriptor := range servDescriptor.GetMethods() {
 		isServerStream := methodDescriptor.IsServerStreaming()
 		isClientStream := methodDescriptor.IsClientStreaming()
@@ -53,16 +54,17 @@ func (g *gRpcServer) methodDesc(servDescriptor *desc.ServiceDescriptor) *gRpcSer
 				ClientStreams: isClientStream,
 			}
 			rev.Streams = append(rev.Streams, streamDesc)
+			g.streamMethodMap[rev.ServiceName][methodDescriptor.GetName()] = streamDesc
 		} else {
 			methodDesc := grpc.MethodDesc{
 				MethodName: methodDescriptor.GetName(),
 				Handler:    createUnaryServerHandler(*rev.ServiceDesc, methodDescriptor),
 			}
 			rev.Methods = append(rev.Methods, methodDesc)
+			g.unaryMethodMap[rev.ServiceName][methodDesc.MethodName] = methodDesc
 		}
 	}
 	return rev
-
 }
 
 func createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -70,7 +72,6 @@ func createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.Met
 		fmt.Println(serviceDesc.ServiceName)
 		fmt.Println(methodDesc.GetName())
 		fmt.Println(srv)
-		//inputParam := dynamic.NewMessage(methodDesc.GetInputType())
 		msgFactory := dynamic.NewMessageFactoryWithDefaults()
 		inputParam := msgFactory.NewMessage(methodDesc.GetInputType())
 		if err := dec(inputParam); err != nil {
