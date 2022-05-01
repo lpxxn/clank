@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type gRpcServer struct {
@@ -21,10 +23,27 @@ type gRpcServiceDesc struct {
 	*grpc.ServiceDesc
 }
 
-func NewGRpcServer() *gRpcServer {
-	return &gRpcServer{
-		unaryMethodMap: make(map[string]map[string]grpc.MethodDesc),
+func ParseServFileDescriptor(fileDesc *desc.FileDescriptor) *gRpcServer {
+	rev := &gRpcServer{
+		unaryMethodMap:  make(map[string]map[string]grpc.MethodDesc),
+		streamMethodMap: map[string]map[string]grpc.StreamDesc{},
 	}
+	rev.extractMethods(fileDesc)
+	return rev
+}
+
+func (g *gRpcServer) Start(port int) {
+	grpcServ := grpc.NewServer()
+	for _, item := range g.rpcServiceDescGroup {
+		grpcServ.RegisterService(item.ServiceDesc, nil)
+	}
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		panic(err)
+	}
+	reflection.Register(grpcServ)
+	grpcServ.Serve(listener)
 }
 
 func (g *gRpcServer) extractMethods(fileDesc *desc.FileDescriptor) {
