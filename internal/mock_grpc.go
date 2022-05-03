@@ -5,30 +5,49 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/jhump/protoreflect/desc"
+	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 type gRpcServer struct {
+	fileFullName string // eg protos/api/student_api.proto
 	// map[serverName]map[methodName]methodDesc
 	unaryMethodMap      map[string]map[string]grpc.MethodDesc
 	streamMethodMap     map[string]map[string]grpc.StreamDesc
 	rpcServiceDescGroup []*gRpcServiceDesc
+	serverNames         map[string]struct{}
 }
 
 type gRpcServiceDesc struct {
 	*grpc.ServiceDesc
 }
 
+func ParseProtoFile(importPath []string, filePath []string) ([]*desc.FileDescriptor, error) {
+	goPath, ok := os.LookupEnv("GOPATH")
+	if ok {
+		importPath = append(importPath, goPath+"/src/")
+	}
+	parser := &protoparse.Parser{
+		ImportPaths: importPath,
+	}
+	return parser.ParseFiles(
+		filePath...,
+	)
+}
+
 func ParseServFileDescriptor(fileDesc *desc.FileDescriptor) *gRpcServer {
 	rev := &gRpcServer{
+		serverNames:     make(map[string]struct{}),
 		unaryMethodMap:  make(map[string]map[string]grpc.MethodDesc),
 		streamMethodMap: map[string]map[string]grpc.StreamDesc{},
+		fileFullName:    fileDesc.GetName(),
 	}
-	rev.extractMethods(fileDesc)
+	rev.extractServicesInfo(fileDesc)
 	return rev
 }
 
@@ -46,8 +65,9 @@ func (g *gRpcServer) Start(port int) {
 	grpcServ.Serve(listener)
 }
 
-func (g *gRpcServer) extractMethods(fileDesc *desc.FileDescriptor) {
+func (g *gRpcServer) extractServicesInfo(fileDesc *desc.FileDescriptor) {
 	for _, servDescriptor := range fileDesc.GetServices() {
+		g.serverNames[servDescriptor.GetName()] = struct{}{}
 		g.rpcServiceDescGroup = append(g.rpcServiceDescGroup, g.methodDesc(servDescriptor))
 	}
 }
