@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 
+	"github.com/golang/protobuf/proto"
+	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
@@ -15,7 +18,6 @@ import (
 )
 
 type gRpcServer struct {
-	fileFullName string // eg protos/api/student_api.proto
 	// map[serverName]map[methodName]methodDesc
 	unaryMethodMap      map[string]map[string]grpc.MethodDesc
 	streamMethodMap     map[string]map[string]grpc.StreamDesc
@@ -40,14 +42,30 @@ func ParseProtoFile(importPath []string, filePath []string) ([]*desc.FileDescrip
 	)
 }
 
-func ParseServFileDescriptor(fileDesc *desc.FileDescriptor) *gRpcServer {
+func LoadProtoset(protosetPath string) (*desc.FileDescriptor, error) {
+	var fds dpb.FileDescriptorSet
+	f, err := os.Open(protosetPath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	bb, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	if err = proto.Unmarshal(bb, &fds); err != nil {
+		return nil, err
+	}
+	return desc.CreateFileDescriptorFromSet(&fds)
+}
+
+func ParseServFileDescriptor(fileDesc ...*desc.FileDescriptor) *gRpcServer {
 	rev := &gRpcServer{
 		serverNames:     make(map[string]struct{}),
 		unaryMethodMap:  make(map[string]map[string]grpc.MethodDesc),
 		streamMethodMap: map[string]map[string]grpc.StreamDesc{},
-		fileFullName:    fileDesc.GetName(),
 	}
-	rev.extractServicesInfo(fileDesc)
+	rev.extractServicesInfo(fileDesc...)
 	return rev
 }
 
@@ -65,10 +83,12 @@ func (g *gRpcServer) Start(port int) {
 	grpcServ.Serve(listener)
 }
 
-func (g *gRpcServer) extractServicesInfo(fileDesc *desc.FileDescriptor) {
-	for _, servDescriptor := range fileDesc.GetServices() {
-		g.serverNames[servDescriptor.GetName()] = struct{}{}
-		g.rpcServiceDescGroup = append(g.rpcServiceDescGroup, g.methodDesc(servDescriptor))
+func (g *gRpcServer) extractServicesInfo(fileDescList ...*desc.FileDescriptor) {
+	for _, fileDesc := range fileDescList {
+		for _, servDescriptor := range fileDesc.GetServices() {
+			g.serverNames[servDescriptor.GetName()] = struct{}{}
+			g.rpcServiceDescGroup = append(g.rpcServiceDescGroup, g.methodDesc(servDescriptor))
+		}
 	}
 }
 
