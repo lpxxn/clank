@@ -21,14 +21,14 @@ func TestServerDesc(t *testing.T) {
 		},
 
 		Servers: ServerDescriptionList{
-			&ServerDescription{
+			&GrpcServerDescription{
 				Name: "api.StudentSrv",
-				Methods: []*MethodDescription{
-					&MethodDescription{
+				Methods: []*GrpcMethodDescription{
+					&GrpcMethodDescription{
 						Name:            "NewStudent",
 						DefaultResponse: `{"code":"OK","desc":"OK","data":"eyJzdHVkZW50TGlzdCI6W3sibmFtZSI6InRlc3QiLCJhZ2UiOjF9LHsibmFtZSI6InRlc3QyIiwiYWdlIjoyfV19"}`,
 					},
-					&MethodDescription{ /// {"id":1}
+					&GrpcMethodDescription{ /// {"id":1}
 						Name:            "StudentByID",
 						DefaultResponse: `{"studentList":[{"name":"test","age":1},{"name":"test2","age":2}]}`,
 						Conditions: []*ResponseConditionDescription{

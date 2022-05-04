@@ -30,11 +30,9 @@ func (s SchemaDescription) Validate() error {
 	if s.Kind != GRPC && s.Kind != HTTP {
 		return errors.New("kind must be GRPC OR HTTP")
 	}
-	if s.Kind == GRPC {
-		err := s.Servers.Validate()
-		if err != nil {
-			return err
-		}
+	err := s.Servers.Validate()
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -47,9 +45,9 @@ const (
 	HTTP ServerKind = "http"
 )
 
-type ServerDescription struct {
-	Name    string                `yaml¡:"name" json:"name"`
-	Methods MethodDescriptionList `yaml:"methods" json:"methods"`
+type GrpcServerDescription struct {
+	Name    string                    `yaml¡:"name" json:"name"`
+	Methods GrpcMethodDescriptionList `yaml:"methods" json:"methods"`
 }
 
 type ServerDescriptionInterface interface {
@@ -90,7 +88,7 @@ func (s ServerList) Validate() error {
 	return nil
 }
 
-type ServerDescriptionList []*ServerDescription
+type ServerDescriptionList []*GrpcServerDescription
 
 func (s ServerDescriptionList) Validate() error {
 	for _, item := range s {
@@ -109,7 +107,7 @@ func (s ServerDescriptionList) ToInterface() []ServerDescriptionInterface {
 	return result
 }
 
-func (s *ServerDescription) Validate() error {
+func (s *GrpcServerDescription) Validate() error {
 	if s.Name == "" {
 		return fmt.Errorf("server name is empty")
 	}
@@ -121,9 +119,9 @@ func (s *ServerDescription) Validate() error {
 	return nil
 }
 
-type MethodDescriptionList []*MethodDescription
+type GrpcMethodDescriptionList []*GrpcMethodDescription
 
-func (m MethodDescriptionList) Validate() error {
+func (m GrpcMethodDescriptionList) Validate() error {
 	for _, method := range m {
 		if err := method.Validate(); err != nil {
 			return err
@@ -132,7 +130,7 @@ func (m MethodDescriptionList) Validate() error {
 	return nil
 }
 
-type MethodDescription struct {
+type GrpcMethodDescription struct {
 	Name            string                          `yaml:"name" json:"name"`
 	DefaultResponse string                          `yaml:"defaultResponse" json:"defaultResponse"`
 	Conditions      []*ResponseConditionDescription `yaml:"conditions" json:"conditions"`
@@ -140,7 +138,7 @@ type MethodDescription struct {
 
 var re = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
 
-func (m *MethodDescription) Validate() error {
+func (m *GrpcMethodDescription) Validate() error {
 	if m.Name == "" {
 		return errors.New("method name is empty")
 	}
