@@ -12,15 +12,18 @@ const requestToken = "$request"
 
 var jsonIterator = jsonIter.ConfigCompatibleWithStandardLibrary
 
-type SchemaDescription struct {
-	Kind    ServerKind            `yaml:"kind" json:"kind"`
-	Port    int                   `yaml:"port" json:"port"`
-	Servers ServerDescriptionList `yaml:"servers" json:"servers"`
+type SchemaDescriptionBase struct {
+	Kind ServerKind `yaml:"kind" json:"kind"`
+	Port int        `yaml:"port" json:"port"`
 
 	// gRpc
 	ImportPath   []string `yaml:"importPath" json:"importPath"`
 	ProtoPath    []string `yaml:"protoPath" json:"protoPath"`
 	ProtosetPath string   `yaml:"protosetPath" json:"protosetPath"`
+}
+type SchemaDescription struct {
+	SchemaDescriptionBase
+	Servers ServerList `yaml:"servers" json:"servers"`
 }
 
 func (s SchemaDescription) Validate() error {
@@ -49,6 +52,44 @@ type ServerDescription struct {
 	Methods MethodDescriptionList `yaml:"methods" json:"methods"`
 }
 
+type ServerDescriptionInterface interface {
+	Validate() error
+}
+
+type ServerList []ServerDescriptionInterface
+
+func (s *SchemaDescription) Unmarshal(d []byte) error {
+	kind := ServerKind(jsonIter.Get(d, "kind").ToString())
+	if kind == GRPC {
+		param := struct {
+			SchemaDescriptionBase
+			Servers ServerDescriptionList `yaml:"servers" json:"servers"`
+		}{}
+		if err := jsonIter.Unmarshal(d, &param); err != nil {
+			return err
+		}
+		s.SchemaDescriptionBase = param.SchemaDescriptionBase
+		s.Servers = make(ServerList, 0, len(param.Servers))
+		for _, server := range param.Servers {
+			s.Servers = append(s.Servers, server)
+		}
+	} else if kind == HTTP {
+
+	}
+
+	return nil
+}
+
+func (s ServerList) Validate() error {
+	for _, item := range s {
+		err := item.Validate()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type ServerDescriptionList []*ServerDescription
 
 func (s ServerDescriptionList) Validate() error {
@@ -58,6 +99,14 @@ func (s ServerDescriptionList) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (s ServerDescriptionList) ToInterface() []ServerDescriptionInterface {
+	result := make([]ServerDescriptionInterface, 0, len(s))
+	for _, item := range s {
+		result = append(result, item)
+	}
+	return result
 }
 
 func (s *ServerDescription) Validate() error {

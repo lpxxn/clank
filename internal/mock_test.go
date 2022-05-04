@@ -13,9 +13,14 @@ const testPort int = 54312
 
 func TestServerDesc(t *testing.T) {
 	schema := &SchemaDescription{
-		Kind: GRPC,
-		Port: testPort,
-		Servers: []*ServerDescription{
+		SchemaDescriptionBase: SchemaDescriptionBase{
+			Kind:       GRPC,
+			Port:       testPort,
+			ImportPath: []string{"./testdata/"},
+			ProtoPath:  []string{"protos/api/student_api.proto"},
+		},
+
+		Servers: ServerDescriptionList{
 			&ServerDescription{
 				Name: "api.StudentSrv",
 				Methods: []*MethodDescription{
@@ -40,9 +45,7 @@ func TestServerDesc(t *testing.T) {
 					},
 				},
 			},
-		},
-		ImportPath: []string{"./testdata/"},
-		ProtoPath:  []string{"protos/api/student_api.proto"},
+		}.ToInterface(),
 	}
 	t.Log(schema)
 	t.Log(schema.Validate())
