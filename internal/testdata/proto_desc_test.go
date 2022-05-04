@@ -11,6 +11,7 @@ import (
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
+	"github.com/lpxxn/clank/internal/testdata/protos"
 	"github.com/lpxxn/clank/internal/testdata/protos/api"
 	"github.com/lpxxn/clank/internal/testdata/protos/model"
 	"github.com/stretchr/testify/assert"
@@ -28,6 +29,33 @@ const testPort int = 54312
 var (
 	testAddress = fmt.Sprintf(":%d", testPort)
 )
+
+func TestProto(t *testing.T) {
+	req := api.QueryStudent{Id: 1}
+	b, _ := json.Marshal(req)
+	t.Log(string(b))
+	resp := api.QueryStudentResponse{StudentList: []*model.Student{
+		{
+			Name: "test",
+			Age:  1,
+		},
+		{
+			Name: "test2",
+			Age:  2,
+		},
+	}}
+	b, _ = json.Marshal(resp)
+	t.Log(string(b))
+
+	result := protos.Result{
+		Code: "OK",
+		Desc: "OK",
+		Data: b,
+	}
+
+	b, _ = json.Marshal(result)
+	t.Log(string(b))
+}
 
 // parse proto
 func TestDynamicProto(t *testing.T) {

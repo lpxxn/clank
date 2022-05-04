@@ -1,9 +1,14 @@
 package internal
 
 type SchemaDescription struct {
-	Kind    ServerKind          `yaml:"kind" json:"kind"`
-	Port    string              `yaml:"port" json:"port"`
-	Servers []ServerDescription `yaml:"servers" json:"servers"`
+	Kind    ServerKind           `yaml:"kind" json:"kind"`
+	Port    int                  `yaml:"port" json:"port"`
+	Servers []*ServerDescription `yaml:"servers" json:"servers"`
+
+	// gRpc
+	ImportPath   []string `yaml:"importPath" json:"importPath"`
+	ProtoPath    []string `yaml:"protoPath" json:"protoPath"`
+	ProtosetPath string   `yaml:"protosetPath" json:"protosetPath"`
 }
 
 type ServerKind string
@@ -14,7 +19,7 @@ const (
 )
 
 type ServerDescription struct {
-	Name    string               `yaml:"name" json:"name"`
+	Name    string               `yaml¡:"name" json:"name"`
 	Methods []*MethodDescription `yaml:"methods" json:"methods"`
 }
 
