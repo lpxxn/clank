@@ -1,4 +1,4 @@
-package test
+package testdata
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
-	"github.com/lpxxn/clank/internal/test/protos/api"
-	"github.com/lpxxn/clank/internal/test/protos/model"
+	"github.com/lpxxn/clank/internal/testdata/protos/api"
+	"github.com/lpxxn/clank/internal/testdata/protos/model"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

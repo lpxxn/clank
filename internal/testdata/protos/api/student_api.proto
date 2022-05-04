@@ -1,9 +1,9 @@
 syntax = "proto3";
 package api;
-option go_package = "github.com/lpxxn/clank/internal/test/protos/api";
+option go_package = "github.com/lpxxn/clank/internal/testdata/protos/api";
 option java_package = "com.proto.api";
 
-import "github.com/lpxxn/clank/internal/test/protos/common.proto";
+import "github.com/lpxxn/clank/internal/testdata/protos/common.proto";
 import "protos/model/students.proto";
 import "google/protobuf/empty.proto";
 

@@ -1,12 +1,12 @@
 
-Ê
-8github.com/lpxxn/clank/internal/test/protos/common.protoprotos"D
+Ò
+<github.com/lpxxn/clank/internal/testdata/protos/common.protoprotos"D
 Result
 code (	Rcode
 desc (	Rdesc
-data (RdataB8
-	com.protoZ+github.com/lpxxn/clank/internal/test/protosbproto3
-´
+data (RdataB<
+	com.protoZ/github.com/lpxxn/clank/internal/testdata/protosbproto3
+¸
 protos/model/students.protomodel"?
 Student
 id (Rid
@@ -16,15 +16,15 @@
 class (	Rclass*
 students (2.model.StudentRstudents
 teacher (	Rteacher
-score (RscoreBD
-com.proto.modelZ1github.com/lpxxn/clank/internal/test/protos/modelbproto3
+score (RscoreBH
+com.proto.modelZ5github.com/lpxxn/clank/internal/testdata/protos/modelbproto3
 ·
 google/protobuf/empty.protogoogle.protobuf"
 EmptyBv
 com.google.protobufB
 EmptyProtoPZ'github.com/golang/protobuf/ptypes/emptyø¢GPBªGoogle.Protobuf.WellKnownTypesbproto3
-É
-protos/api/student_api.protoapi8github.com/lpxxn/clank/internal/test/protos/common.protoprotos/model/students.protogoogle/protobuf/empty.proto"
+Ñ
+protos/api/student_api.protoapi<github.com/lpxxn/clank/internal/testdata/protos/common.protoprotos/model/students.protogoogle/protobuf/empty.proto"
 QueryStudent
 id (Rid"H
 QueryStudentResponse0
@@ -36,5 +36,5 @@ NewStudent.model.Student.protos.Result;
 StudentByID.api.QueryStudent.api.QueryStudentResponseA
 
 AllStudent.google.protobuf.Empty.api.QueryStudentResponse0?
-StudentInfo.api.QueryStudent.api.QueryStudentResponse(0B@
-com.proto.apiZ/github.com/lpxxn/clank/internal/test/protos/apibproto3
+StudentInfo.api.QueryStudent.api.QueryStudentResponse(0BD
+com.proto.apiZ3github.com/lpxxn/clank/internal/testdata/protos/apibproto3

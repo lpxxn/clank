@@ -1,6 +1,6 @@
 syntax = "proto3";
 package protos;
-option go_package = "github.com/lpxxn/clank/internal/test/protos";
+option go_package = "github.com/lpxxn/clank/internal/testdata/protos";
 option java_package = "com.proto";
 
 

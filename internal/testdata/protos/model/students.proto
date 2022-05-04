@@ -1,6 +1,6 @@
 syntax = "proto3";
 package model;
-option go_package = "github.com/lpxxn/clank/internal/test/protos/model";
+option go_package = "github.com/lpxxn/clank/internal/testdata/protos/model";
 option java_package = "com.proto.model";
 
 message Student {

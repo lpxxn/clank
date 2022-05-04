@@ -85,7 +85,7 @@ func ParseServerMethodsFromFileDescriptor(fileDesc ...*desc.FileDescriptor) *gRp
 	return rev
 }
 
-func (g *gRpcServer) Start(port int) {
+func (g *gRpcServer) Start(port int) error {
 	grpcServ := grpc.NewServer()
 	for _, item := range g.rpcServiceDescGroup {
 		grpcServ.RegisterService(item.ServiceDesc, nil)
@@ -93,10 +93,10 @@ func (g *gRpcServer) Start(port int) {
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		panic(err)
+		return err
 	}
 	reflection.Register(grpcServ)
-	grpcServ.Serve(listener)
+	return grpcServ.Serve(listener)
 }
 
 func (g *gRpcServer) extractServicesInfo(fileDescList ...*desc.FileDescriptor) {
