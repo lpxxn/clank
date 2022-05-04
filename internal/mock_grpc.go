@@ -25,6 +25,13 @@ type gRpcServer struct {
 	serverNames         map[string]struct{}
 }
 
+type MockGrpcResponse struct {
+	serverName string
+	methodName string
+	respBody   map[string]struct{}
+	conditions string
+}
+
 type gRpcServiceDesc struct {
 	*grpc.ServiceDesc
 }

@@ -1,6 +1,14 @@
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
+# github.com/getkin/kin-openapi v0.94.0
+## explicit; go 1.16
+# github.com/ghodss/yaml v1.0.0
+## explicit
+# github.com/go-openapi/jsonpointer v0.19.5
+## explicit; go 1.13
+# github.com/go-openapi/swag v0.19.5
+## explicit
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
 github.com/golang/protobuf/jsonpb
@@ -25,6 +33,8 @@ github.com/jhump/protoreflect/desc/sourceinfo
 github.com/jhump/protoreflect/dynamic
 github.com/jhump/protoreflect/internal
 github.com/jhump/protoreflect/internal/codec
+# github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e
+## explicit
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib

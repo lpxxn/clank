@@ -13,7 +13,12 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/getkin/kin-openapi v0.94.0 // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/go-openapi/jsonpointer v0.19.5 // indirect
+	github.com/go-openapi/swag v0.19.5 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
 	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40 // indirect
