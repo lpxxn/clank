@@ -1,6 +1,12 @@
 package internal
 
-import "testing"
+import (
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/Knetic/govaluate"
+)
 
 const testPort int = 54312
 
@@ -48,6 +54,51 @@ func TestServer2(t *testing.T) {
 	if err := ser.Start(testPort); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestValuate1(t *testing.T) {
+	expression, err := govaluate.NewEvaluableExpression("10 > 0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := expression.Evaluate(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(result)
+
+	expression, err = govaluate.NewEvaluableExpression(`10 > "afd"`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err = expression.Evaluate(nil)
+	if err != nil {
+		t.Log(err)
+	}
+	t.Log(result)
+
+	parameters := make(map[string]interface{}, 8)
+	parameters["$request.id"] = -1
+	str := `$request.id > 0 || $request.id == -1 || $request.name == "test"`
+	const requestToken = "$request"
+	var re = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
+	match := re.FindAllStringSubmatch(str, -1)
+	idx := re.SubexpIndex("parameter")
+	for _, matchItem := range match {
+		t.Log(matchItem[idx])
+	}
+	str = strings.ReplaceAll(str, "$request.id", "123")
+	str = strings.ReplaceAll(str, "$request.name", `"test"`)
+	t.Log(str)
+	expression, err = govaluate.NewEvaluableExpression(str)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err = expression.Evaluate(parameters)
+	if err != nil {
+		t.Log(err)
+	}
+	t.Log(result)
 }
 
 func TestServer3(t *testing.T) {
