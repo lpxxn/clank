@@ -29,6 +29,22 @@ type gRpcServiceDesc struct {
 	*grpc.ServiceDesc
 }
 
+func ParseServerMethodsFromProto(importPath []string, filePath []string) (*gRpcServer, error) {
+	fileDesc, err := ParseProtoFile(importPath, filePath)
+	if err != nil {
+		return nil, err
+	}
+	return ParseServerMethodsFromFileDescriptor(fileDesc...), nil
+}
+
+func ParseServerMethodsFromProtoset(filePath string) (*gRpcServer, error) {
+	fileDesc, err := ParseProtoFileFromProtoset(filePath)
+	if err != nil {
+		return nil, err
+	}
+	return ParseServerMethodsFromFileDescriptor(fileDesc), nil
+}
+
 func ParseProtoFile(importPath []string, filePath []string) ([]*desc.FileDescriptor, error) {
 	goPath, ok := os.LookupEnv("GOPATH")
 	if ok {
@@ -42,7 +58,7 @@ func ParseProtoFile(importPath []string, filePath []string) ([]*desc.FileDescrip
 	)
 }
 
-func LoadProtoset(protosetPath string) (*desc.FileDescriptor, error) {
+func ParseProtoFileFromProtoset(protosetPath string) (*desc.FileDescriptor, error) {
 	var fds dpb.FileDescriptorSet
 	f, err := os.Open(protosetPath)
 	if err != nil {
@@ -59,7 +75,7 @@ func LoadProtoset(protosetPath string) (*desc.FileDescriptor, error) {
 	return desc.CreateFileDescriptorFromSet(&fds)
 }
 
-func ParseServFileDescriptor(fileDesc ...*desc.FileDescriptor) *gRpcServer {
+func ParseServerMethodsFromFileDescriptor(fileDesc ...*desc.FileDescriptor) *gRpcServer {
 	rev := &gRpcServer{
 		serverNames:     make(map[string]struct{}),
 		unaryMethodMap:  make(map[string]map[string]grpc.MethodDesc),
