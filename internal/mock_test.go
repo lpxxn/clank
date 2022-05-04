@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Knetic/govaluate"
+	jsonIter "github.com/json-iterator/go"
 )
 
 const testPort int = 54312
@@ -32,7 +33,7 @@ func TestServerDesc(t *testing.T) {
 							},
 
 							&ResponseConditionDescription{
-								Condition: "$request.id == 123 || $request.id == 456",
+								Condition: "$request.obj.name == 123 || $request.id == 456",
 								Response:  `{"studentList":[{"name":"123||456","age":123456}]}`,
 							},
 						},
@@ -44,6 +45,7 @@ func TestServerDesc(t *testing.T) {
 		ProtoPath:  []string{"protos/api/student_api.proto"},
 	}
 	t.Log(schema)
+	t.Log(schema.Validate())
 }
 
 func TestServer2(t *testing.T) {
@@ -80,7 +82,6 @@ func TestValuate1(t *testing.T) {
 	parameters := make(map[string]interface{}, 8)
 	parameters["$request.id"] = -1
 	str := `$request.id > 0 || $request.id == -1 || $request.name == "test"`
-	const requestToken = "$request"
 	var re = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
 	match := re.FindAllStringSubmatch(str, -1)
 	idx := re.SubexpIndex("parameter")
@@ -109,4 +110,11 @@ func TestServer3(t *testing.T) {
 	if err := ser.Start(testPort); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestJson(t *testing.T) {
+	val := []byte(`{"ID":1,"Name":"Reds","Colors":["Crimson","Red","Ruby","Maroon"], "info":{"name":"test","age":1}}`)
+	t.Log(jsonIter.Get(val, "Colors", 0).ToString())
+	t.Log(jsonIter.Get(val, "info", "name").ToString())
+	t.Log(jsonIter.Get(val, "info", "age").ToInt())
 }
