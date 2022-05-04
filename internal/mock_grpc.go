@@ -133,7 +133,7 @@ func (g *gRpcServer) methodDesc(servDescriptor *desc.ServiceDescriptor) *gRpcSer
 		} else {
 			methodDesc := grpc.MethodDesc{
 				MethodName: methodDescriptor.GetName(),
-				Handler:    createUnaryServerHandler(*rev.ServiceDesc, methodDescriptor),
+				Handler:    g.createUnaryServerHandler(*rev.ServiceDesc, methodDescriptor),
 			}
 			rev.Methods = append(rev.Methods, methodDesc)
 			g.unaryMethodMap[rev.ServiceName][methodDesc.MethodName] = methodDesc
@@ -142,7 +142,7 @@ func (g *gRpcServer) methodDesc(servDescriptor *desc.ServiceDescriptor) *gRpcSer
 	return rev
 }
 
-func createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	return func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 		fmt.Println(serviceDesc.ServiceName)
 		fmt.Println(methodDesc.GetName())
