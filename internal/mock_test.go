@@ -13,3 +13,13 @@ func TestServer1(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestServer2(t *testing.T) {
+	ser, err := ParseServerMethodsFromProtoset("./testdata/protos/test.protoset")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ser.Start(testPort); err != nil {
+		t.Fatal(err)
+	}
+}
