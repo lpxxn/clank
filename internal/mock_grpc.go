@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -224,7 +225,25 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 					}
 				}
 			}
+			outPut := msgFactory.NewMessage(unaryMethod.methodDescriptor.GetOutputType())
+			dynamicOutput, err := dynamic.AsDynamicMessage(outPut)
+			if err != nil {
+				return err
+			}
 
+			if item.DefaultResponse != "" {
+				errors.New("default response is not supported")
+
+				if err := dynamicOutput.UnmarshalJSON([]byte(item.DefaultResponse)); err != nil {
+					return fmt.Errorf("server: %s method: %s, invalid default response %s, err: [%w]", serverSchema.Name, item.Name, item.DefaultResponse, err)
+				}
+			}
+
+			for _, v := range item.Conditions {
+				if err := dynamicOutput.UnmarshalJSON([]byte(v.Response)); err != nil {
+					return fmt.Errorf("server: %s method: %s, invalid condition response %s, err: [%w]", serverSchema.Name, item.Name, v.Response, err)
+				}
+			}
 			continue
 		}
 

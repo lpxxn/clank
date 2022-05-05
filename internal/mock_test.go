@@ -34,7 +34,7 @@ func TestServerDesc(t *testing.T) {
 						Conditions: []*ResponseConditionDescription{
 							&ResponseConditionDescription{
 								Condition: "$request.id == 111",
-								Response:  `{"studentList":[{"name":"test1111","age":111}]}`,
+								Response:  `{"a": adfe}`, //`{"studentList":[{"name":"test1111","age":111}]}`,
 							},
 
 							&ResponseConditionDescription{
