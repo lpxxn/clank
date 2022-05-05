@@ -50,6 +50,15 @@ type GrpcServerDescription struct {
 	Methods GrpcMethodDescriptionList `yaml:"methods" json:"methods"`
 }
 
+func (g *GrpcServerDescription) GetMethod(methodName string) (*GrpcMethodDescription, error) {
+	for _, method := range g.Methods {
+		if method.Name == methodName {
+			return method, nil
+		}
+	}
+	return nil, fmt.Errorf("method %s not found", methodName)
+}
+
 type ServerDescriptionInterface interface {
 	Validate() error
 }
@@ -61,7 +70,7 @@ func (s *SchemaDescription) Unmarshal(d []byte) error {
 	if kind == GRPC {
 		param := struct {
 			SchemaDescriptionBase
-			Servers ServerDescriptionList `yaml:"servers" json:"servers"`
+			Servers GrpcServerDescriptionList `yaml:"servers" json:"servers"`
 		}{}
 		if err := jsonIter.Unmarshal(d, &param); err != nil {
 			return err
@@ -88,9 +97,9 @@ func (s ServerList) Validate() error {
 	return nil
 }
 
-type ServerDescriptionList []*GrpcServerDescription
+type GrpcServerDescriptionList []*GrpcServerDescription
 
-func (s ServerDescriptionList) Validate() error {
+func (s GrpcServerDescriptionList) Validate() error {
 	for _, item := range s {
 		if err := item.Validate(); err != nil {
 			return err
@@ -99,7 +108,16 @@ func (s ServerDescriptionList) Validate() error {
 	return nil
 }
 
-func (s ServerDescriptionList) ToInterface() []ServerDescriptionInterface {
+func (s GrpcServerDescriptionList) GetMethod(servName string, methodName string) (*GrpcMethodDescription, error) {
+	for _, item := range s {
+		if item.Name == servName {
+			return item.GetMethod(methodName)
+		}
+	}
+	return nil, fmt.Errorf("server: %s method %s not found", servName, methodName)
+}
+
+func (s GrpcServerDescriptionList) ToInterface() []ServerDescriptionInterface {
 	result := make([]ServerDescriptionInterface, 0, len(s))
 	for _, item := range s {
 		result = append(result, item)
@@ -153,8 +171,10 @@ func (m *GrpcMethodDescription) Validate() error {
 		}
 		match := re.FindAllStringSubmatch(c.Condition, -1)
 		idx := re.SubexpIndex("parameter")
+		c.Parameters = map[string]struct{}{}
 		for _, matchItem := range match {
 			m.Parameters[requestToken+"."+matchItem[idx]] = matchItem[idx]
+			c.Parameters[matchItem[idx]] = struct{}{}
 			fmt.Println(matchItem[idx])
 		}
 	}
@@ -164,6 +184,7 @@ func (m *GrpcMethodDescription) Validate() error {
 type ResponseConditionDescriptionList []*ResponseConditionDescription
 
 type ResponseConditionDescription struct {
-	Condition string `yaml:"condition" json:"condition"`
-	Response  string `yaml:"response" json:"response"`
+	Condition  string              `yaml:"condition" json:"condition"`
+	Response   string              `yaml:"response" json:"response"`
+	Parameters map[string]struct{} `yaml:"-" json:"-"`
 }

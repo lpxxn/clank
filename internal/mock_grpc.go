@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Knetic/govaluate"
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/jhump/protoreflect/desc"
@@ -25,6 +26,8 @@ type gRpcServer struct {
 	streamMethodMap     map[string]map[string]gRpcStreamDesc
 	rpcServiceDescGroup []*gRpcServiceDesc
 	serverNames         map[string]struct{}
+
+	GetOutputJson func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, inputParam proto.Message) ([]byte, error)
 }
 
 type MockGrpcResponse struct {
@@ -173,24 +176,22 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 		if err := dec(inputParam); err != nil {
 			return nil, err
 		}
+		fmt.Println(inputParam.String())
 
 		outPut := msgFactory.NewMessage(methodDesc.GetOutputType())
 		dynamicOutput, err := dynamic.AsDynamicMessage(outPut)
 		if err != nil {
 			return nil, err
 		}
-		if err := dynamicOutput.UnmarshalJSON([]byte(`{"code": "OK", "desc": "abcdef"}`)); err != nil {
-			return nil, err
-		}
-		outPutJson, err := dynamicOutput.MarshalJSON()
-		fmt.Println(outPutJson)
 
-		outPutJson, err = json.Marshal(outPut)
+		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, inputParam)
+		fmt.Println(string(outputJson))
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(outPutJson)
-		dynamicOutput.SetFieldByName("desc", "hahahahah")
+		if err := dynamicOutput.UnmarshalJSON(outputJson); err != nil {
+			return nil, err
+		}
 		return dynamicOutput, nil
 	}
 }
@@ -258,7 +259,7 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 }
 
 func ValidateServiceInputAndOutput(schemaList ServerList, gRpcServ *gRpcServer) error {
-	grpcServersSchema := ServerDescriptionList{}
+	grpcServersSchema := GrpcServerDescriptionList{}
 	for _, server := range schemaList {
 		if s, ok := server.(*GrpcServerDescription); ok {
 			grpcServersSchema = append(grpcServersSchema, s)
@@ -272,4 +273,86 @@ func ValidateServiceInputAndOutput(schemaList ServerList, gRpcServ *gRpcServer) 
 		}
 	}
 	return nil
+}
+
+func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
+	grpcServersSchema := GrpcServerDescriptionList{}
+	for _, server := range schemaList {
+		if s, ok := server.(*GrpcServerDescription); ok {
+			grpcServersSchema = append(grpcServersSchema, s)
+		} else {
+			return fmt.Errorf("invalid server type %T, need *GrpcServerDescription type", server)
+		}
+	}
+	gRpcServ.GetOutputJson = func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, inputParam proto.Message) ([]byte, error) {
+		methodSchema, err := grpcServersSchema.GetMethod(serviceDesc.ServiceName, methodDesc.GetName())
+		if err != nil {
+			return nil, fmt.Errorf("server: %s method: %s, err: [%w]", serviceDesc.ServiceName, methodDesc.GetName(), err)
+		}
+		if len(methodSchema.Conditions) == 0 {
+			return []byte(methodSchema.DefaultResponse), nil
+		}
+
+		dynamicMsg, err := dynamic.AsDynamicMessage(inputParam)
+		if err != nil {
+			return nil, err
+		}
+		inputJsonBody, err := dynamicMsg.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		for _, condition := range methodSchema.Conditions {
+			conditionStr := condition.Condition
+			paramValue := map[string]interface{}{}
+			notFound := false
+			for k := range condition.Parameters {
+				g := jsonIterator.Get(inputJsonBody, keysInterfaceSlice(k)...)
+				fmt.Println("g:", g, "body:", string(inputJsonBody), "condition:", conditionStr)
+				if g.LastError() != nil {
+					fmt.Println(g.LastError())
+					notFound = true
+					continue
+				}
+				fmt.Println("json value", g.GetInterface())
+				//t := g.ValueType()
+				//if t == jsoniter.StringValue {
+				//	paramValue[k] = fmt.Sprintf(`"%s"`, g.ToString())
+				//} else {
+				//	paramValue[k] = g.GetInterface()
+				//}
+				paramValue[k] = g.GetInterface()
+			}
+			if notFound || len(paramValue) == 0 {
+				continue
+			}
+			for k, v := range paramValue {
+				conditionStr = strings.ReplaceAll(conditionStr, requestToken+"."+k, fmt.Sprintf("%v", v))
+			}
+			fmt.Println("conditionStr", conditionStr)
+			expression, err := govaluate.NewEvaluableExpression(conditionStr)
+			if err != nil {
+				return nil, err
+			}
+			result, err := expression.Evaluate(nil)
+			fmt.Println("evaluate result", result, err)
+			if err != nil {
+				return nil, err
+			}
+			if result.(bool) == true {
+				return []byte(condition.Response), nil
+			}
+		}
+		return []byte(methodSchema.DefaultResponse), nil
+	}
+	return nil
+}
+
+func keysInterfaceSlice(k string) []interface{} {
+	keys := strings.Split(k, ".")
+	var keyList []interface{}
+	for _, v := range keys {
+		keyList = append(keyList, v)
+	}
+	fmt.Println("keyList", keyList)
+	return keyList
 }

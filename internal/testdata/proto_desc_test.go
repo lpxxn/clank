@@ -161,6 +161,7 @@ func TestRpcClient(t *testing.T) {
 	}
 	client := api.NewStudentSrvClient(conn)
 	result, err := client.NewStudent(context.Background(), &model.Student{
+		Id:   111,
 		Name: "test",
 	})
 
@@ -169,6 +170,16 @@ func TestRpcClient(t *testing.T) {
 	}
 
 	t.Log(result)
+
+	rev2, err := client.StudentByID(context.Background(), &api.QueryStudent{
+		Id: 11,
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(rev2)
 	out := map[string]interface{}{}
 	err = conn.Invoke(context.Background(), "/api.StudentSrv/NewStudent", map[string]string{"name": "test"}, out)
 	if err != nil {
