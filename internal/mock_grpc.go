@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -19,8 +20,8 @@ import (
 
 type gRpcServer struct {
 	// map[serverName]map[methodName]methodDesc
-	unaryMethodMap      map[string]map[string]grpc.MethodDesc
-	streamMethodMap     map[string]map[string]grpc.StreamDesc
+	unaryMethodMap      map[string]map[string]gRpcMethodDesc
+	streamMethodMap     map[string]map[string]gRpcStreamDesc
 	rpcServiceDescGroup []*gRpcServiceDesc
 	serverNames         map[string]struct{}
 }
@@ -34,6 +35,16 @@ type MockGrpcResponse struct {
 
 type gRpcServiceDesc struct {
 	*grpc.ServiceDesc
+}
+
+type gRpcMethodDesc struct {
+	*grpc.MethodDesc
+	methodDescriptor *desc.MethodDescriptor
+}
+
+type gRpcStreamDesc struct {
+	*grpc.StreamDesc
+	methodDescriptor *desc.MethodDescriptor
 }
 
 func ParseServerMethodsFromProto(importPath []string, filePath []string) (*gRpcServer, error) {
@@ -85,8 +96,8 @@ func ParseProtoFileFromProtoset(protosetPath string) (*desc.FileDescriptor, erro
 func ParseServerMethodsFromFileDescriptor(fileDesc ...*desc.FileDescriptor) *gRpcServer {
 	rev := &gRpcServer{
 		serverNames:     make(map[string]struct{}),
-		unaryMethodMap:  make(map[string]map[string]grpc.MethodDesc),
-		streamMethodMap: map[string]map[string]grpc.StreamDesc{},
+		unaryMethodMap:  make(map[string]map[string]gRpcMethodDesc),
+		streamMethodMap: map[string]map[string]gRpcStreamDesc{},
 	}
 	rev.extractServicesInfo(fileDesc...)
 	return rev
@@ -109,7 +120,7 @@ func (g *gRpcServer) Start(port int) error {
 func (g *gRpcServer) extractServicesInfo(fileDescList ...*desc.FileDescriptor) {
 	for _, fileDesc := range fileDescList {
 		for _, servDescriptor := range fileDesc.GetServices() {
-			g.serverNames[servDescriptor.GetName()] = struct{}{}
+			g.serverNames[servDescriptor.GetFullyQualifiedName()] = struct{}{}
 			g.rpcServiceDescGroup = append(g.rpcServiceDescGroup, g.methodDesc(servDescriptor))
 		}
 	}
@@ -122,27 +133,29 @@ func (g *gRpcServer) methodDesc(servDescriptor *desc.ServiceDescriptor) *gRpcSer
 			Metadata:    servDescriptor.GetFile().GetName(),
 		},
 	}
-	g.unaryMethodMap[rev.ServiceName] = make(map[string]grpc.MethodDesc)
-	g.streamMethodMap[rev.ServiceName] = make(map[string]grpc.StreamDesc)
+	g.unaryMethodMap[rev.ServiceName] = make(map[string]gRpcMethodDesc)
+	g.streamMethodMap[rev.ServiceName] = make(map[string]gRpcStreamDesc)
 	for _, methodDescriptor := range servDescriptor.GetMethods() {
 		isServerStream := methodDescriptor.IsServerStreaming()
 		isClientStream := methodDescriptor.IsClientStreaming()
 		if isServerStream || isClientStream {
-			streamDesc := grpc.StreamDesc{
+			streamDesc := gRpcStreamDesc{StreamDesc: &grpc.StreamDesc{
 				StreamName: methodDescriptor.GetName(),
 				// TODO: // wait a moment
 				Handler:       nil,
 				ServerStreams: isServerStream,
 				ClientStreams: isClientStream,
-			}
-			rev.Streams = append(rev.Streams, streamDesc)
+			}, methodDescriptor: methodDescriptor}
+			rev.Streams = append(rev.Streams, *streamDesc.StreamDesc)
 			g.streamMethodMap[rev.ServiceName][methodDescriptor.GetName()] = streamDesc
 		} else {
-			methodDesc := grpc.MethodDesc{
+			methodDesc := gRpcMethodDesc{MethodDesc: &grpc.MethodDesc{
 				MethodName: methodDescriptor.GetName(),
 				Handler:    g.createUnaryServerHandler(*rev.ServiceDesc, methodDescriptor),
+			},
+				methodDescriptor: methodDescriptor,
 			}
-			rev.Methods = append(rev.Methods, methodDesc)
+			rev.Methods = append(rev.Methods, *methodDesc.MethodDesc)
 			g.unaryMethodMap[rev.ServiceName][methodDesc.MethodName] = methodDesc
 		}
 	}
@@ -179,4 +192,65 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 		dynamicOutput.SetFieldByName("desc", "hahahahah")
 		return dynamicOutput, nil
 	}
+}
+
+func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) error {
+	if _, ok := g.serverNames[serverSchema.Name]; !ok {
+		return fmt.Errorf("invalid server name %s", serverSchema.Name)
+	}
+	for _, item := range serverSchema.Methods {
+		unaryMethod, ok := g.unaryMethodMap[serverSchema.Name][item.Name]
+		conditionParameters := item.Parameters
+		if ok {
+			_ = unaryMethod
+			msgFactory := dynamic.NewMessageFactoryWithDefaults()
+			inputParam := msgFactory.NewMessage(unaryMethod.methodDescriptor.GetInputType())
+
+			fmt.Println(json.Marshal(inputParam)) // {}
+			dynamicMsg, err := dynamic.AsDynamicMessage(inputParam)
+			if err != nil {
+				return err
+			}
+			jsonBody, err := dynamicMsg.MarshalJSON()
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(jsonBody))
+
+			for _, v := range conditionParameters {
+				if !strings.Contains(v, ".") {
+					if _, err := dynamicMsg.TryGetFieldByName(v); err != nil {
+						return err
+					}
+				}
+			}
+
+			continue
+		}
+
+		streamMethod, ok := g.streamMethodMap[serverSchema.Name][item.Name]
+		if ok {
+			_ = streamMethod
+			continue
+		}
+		return fmt.Errorf("invalid method name %s", item.Name)
+	}
+	return nil
+}
+
+func ValidateServiceInputAndOutput(schemaList ServerList, gRpcServ *gRpcServer) error {
+	grpcServersSchema := ServerDescriptionList{}
+	for _, server := range schemaList {
+		if s, ok := server.(*GrpcServerDescription); ok {
+			grpcServersSchema = append(grpcServersSchema, s)
+		} else {
+			return fmt.Errorf("invalid server type %T, need *GrpcServerDescription type", server)
+		}
+	}
+	for _, item := range grpcServersSchema {
+		if err := gRpcServ.ValidateSchemaMethod(item); err != nil {
+			return err
+		}
+	}
+	return nil
 }

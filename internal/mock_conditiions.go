@@ -131,9 +131,10 @@ func (m GrpcMethodDescriptionList) Validate() error {
 }
 
 type GrpcMethodDescription struct {
-	Name            string                          `yaml:"name" json:"name"`
-	DefaultResponse string                          `yaml:"defaultResponse" json:"defaultResponse"`
-	Conditions      []*ResponseConditionDescription `yaml:"conditions" json:"conditions"`
+	Name            string                           `yaml:"name" json:"name"`
+	DefaultResponse string                           `yaml:"defaultResponse" json:"defaultResponse"`
+	Conditions      ResponseConditionDescriptionList `yaml:"conditions" json:"conditions"`
+	Parameters      map[string]string                `yaml:"-" json:"-"`
 }
 
 var re = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
@@ -145,7 +146,7 @@ func (m *GrpcMethodDescription) Validate() error {
 	if m.DefaultResponse == "" {
 		return errors.New("method default response is empty")
 	}
-	params := map[string]struct{}{}
+	m.Parameters = map[string]string{}
 	for _, c := range m.Conditions {
 		if c.Condition == "" || c.Response == "" {
 			return errors.New("condition or response is empty")
@@ -153,12 +154,14 @@ func (m *GrpcMethodDescription) Validate() error {
 		match := re.FindAllStringSubmatch(c.Condition, -1)
 		idx := re.SubexpIndex("parameter")
 		for _, matchItem := range match {
-			params[requestToken+"."+matchItem[idx]] = struct{}{}
+			m.Parameters[requestToken+"."+matchItem[idx]] = matchItem[idx]
 			fmt.Println(matchItem[idx])
 		}
 	}
 	return nil
 }
+
+type ResponseConditionDescriptionList []*ResponseConditionDescription
 
 type ResponseConditionDescription struct {
 	Condition string `yaml:"condition" json:"condition"`

@@ -49,6 +49,13 @@ func TestServerDesc(t *testing.T) {
 	}
 	t.Log(schema)
 	t.Log(schema.Validate())
+	ser, err := ParseServerMethodsFromProto([]string{"./testdata/"}, []string{"protos/api/student_api.proto"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ValidateServiceInputAndOutput(schema.Servers, ser); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestServer2(t *testing.T) {
