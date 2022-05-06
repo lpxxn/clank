@@ -31,18 +31,5 @@ func TestYaml1(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(servSchema)
-	t.Log(servSchema.Validate())
-	serv, err := internal.ParseServerMethodsFromProto(servSchema.ImportPath, servSchema.ProtoPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := internal.ValidateServiceInputAndOutput(servSchema.Servers, serv); err != nil {
-		t.Fatal(err)
-	}
-	if err := internal.SetOutputFunc(servSchema.Servers, serv); err != nil {
-		t.Fatal(err)
-	}
-	if err := serv.StartWithPort(servSchema.Port); err != nil {
-		t.Fatal(err)
-	}
+	t.Log(servSchema.ValidateAndStartServer())
 }

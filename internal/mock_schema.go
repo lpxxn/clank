@@ -38,6 +38,28 @@ func (s SchemaDescription) Validate() error {
 	return nil
 }
 
+func (s SchemaDescription) ValidateAndStartServer() error {
+	if err := s.Validate(); err != nil {
+		return err
+	}
+	if s.Kind == GRPC {
+		serv, err := ParseServerMethodsFromProto(s.ImportPath, s.ProtoPath)
+		if err != nil {
+			return err
+		}
+		if err := ValidateServiceInputAndOutput(s.Servers, serv); err != nil {
+			return err
+		}
+		if err := SetOutputFunc(s.Servers, serv); err != nil {
+			return err
+		}
+		if err := serv.StartWithPort(s.Port); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type ServerKind string
 
 const (
