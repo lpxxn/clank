@@ -25,11 +25,7 @@ func TestYaml1(t *testing.T) {
 	}
 	t.Log(m)
 
-	servSchema := &internal.SchemaDescription{}
-	_ = servSchema
-	if err := yaml.Unmarshal(body, servSchema); err != nil {
-		t.Fatal(err)
-	}
+	servSchema, err := internal.LoadSchemaFromYaml("grpc_serv.yaml")
 	t.Log(servSchema)
 	t.Log(servSchema.ValidateAndStartServer())
 }
