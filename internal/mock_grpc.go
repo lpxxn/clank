@@ -107,7 +107,7 @@ func ParseServerMethodsFromFileDescriptor(fileDesc ...*desc.FileDescriptor) *gRp
 	return rev
 }
 
-func (g *gRpcServer) Start(port int) error {
+func (g *gRpcServer) StartWithPort(port int) error {
 	grpcServ := grpc.NewServer()
 	for _, item := range g.rpcServiceDescGroup {
 		grpcServ.RegisterService(item.ServiceDesc, nil)

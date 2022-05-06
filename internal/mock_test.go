@@ -62,7 +62,7 @@ func TestServerDesc(t *testing.T) {
 	}
 	t.Log(schema)
 	t.Log(schema.Validate())
-	ser, err := ParseServerMethodsFromProto([]string{"./testdata/"}, []string{"protos/api/student_api.proto"})
+	ser, err := ParseServerMethodsFromProto(schema.ImportPath, schema.ProtoPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestServerDesc(t *testing.T) {
 	if err := SetOutputFunc(schema.Servers, ser); err != nil {
 		t.Fatal(err)
 	}
-	if err := ser.Start(schema.Port); err != nil {
+	if err := ser.StartWithPort(schema.Port); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -82,7 +82,7 @@ func TestServer2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := ser.Start(testPort); err != nil {
+	if err := ser.StartWithPort(testPort); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -173,7 +173,7 @@ func TestServer3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := ser.Start(testPort); err != nil {
+	if err := ser.StartWithPort(testPort); err != nil {
 		t.Fatal(err)
 	}
 }
