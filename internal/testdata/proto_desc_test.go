@@ -36,12 +36,12 @@ func TestProto(t *testing.T) {
 	t.Log(string(b))
 	resp := api.QueryStudentResponse{StudentList: []*model.Student{
 		{
-			Name: "test",
+			Name: "heihei",
 			Age:  1,
 		},
 		{
-			Name: "test2",
-			Age:  2,
+			Name: "hahaha",
+			Age:  9,
 		},
 	}}
 	b, _ = json.Marshal(resp)
@@ -162,7 +162,7 @@ func TestRpcClient(t *testing.T) {
 	client := api.NewStudentSrvClient(conn)
 	result, err := client.NewStudent(context.Background(), &model.Student{
 		Id:   111,
-		Name: "test",
+		Name: "abc",
 	})
 
 	if err != nil {
@@ -174,11 +174,17 @@ func TestRpcClient(t *testing.T) {
 	rev2, err := client.StudentByID(context.Background(), &api.QueryStudent{
 		Id: 11,
 	})
-
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Log(rev2)
 
+	rev2, err = client.StudentByID(context.Background(), &api.QueryStudent{
+		Id: 456,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Log(rev2)
 	out := map[string]interface{}{}
 	err = conn.Invoke(context.Background(), "/api.StudentSrv/NewStudent", map[string]string{"name": "test"}, out)

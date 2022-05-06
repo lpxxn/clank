@@ -30,7 +30,12 @@ func TestServerDesc(t *testing.T) {
 						Conditions: []*ResponseConditionDescription{
 							&ResponseConditionDescription{
 								Condition: `"$request.name" == "test"`,
-								Response:  `{"code":"OK","desc":"OKHAHA","data":"eyJzdHVkZW50TGlzdCI6W3sibmFtZSI6InRlc3QiLCJhZ2UiOjF9LHsibmFtZSI6InRlc3QyIiwiYWdlIjoyfV19"}`,
+								Response:  `{"code":"OK","desc":"OKHAHA","data":"eyJzdHVkZW50TGlzdCI6W3sibmFtZSI6ImhlaWhlaSIsImFnZSI6MX0seyJuYW1lIjoiaGFoYWhhIiwiYWdlIjo5fV19"}`,
+							},
+
+							&ResponseConditionDescription{
+								Condition: `"$request.name" == "abc" && $request.id == 111`,
+								Response:  `{"code":"OK","desc":"OKabc","data":"eyJzdHVkZW50TGlzdCI6W3sibmFtZSI6ImhlaWhlaSIsImFnZSI6MX0seyJuYW1lIjoiaGFoYWhhIiwiYWdlIjo5fV19"}`,
 							},
 						},
 					},
@@ -44,7 +49,7 @@ func TestServerDesc(t *testing.T) {
 							},
 
 							&ResponseConditionDescription{
-								Condition: `"$request.obj.name" == 123 || $request.id == 456`,
+								Condition: `$request.id == 456`,
 								Response:  `{"studentList":[{"name":"123||456","age":123456}]}`,
 							},
 						},
