@@ -86,6 +86,29 @@ func (s *SchemaDescription) Unmarshal(d []byte) error {
 
 	return nil
 }
+func (s *SchemaDescription) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	b := SchemaDescriptionBase{}
+	if err := unmarshal(&b); err != nil {
+		return err
+	}
+	kind := b.Kind
+	if kind == GRPC {
+		param := struct {
+			Servers GrpcServerDescriptionList `yaml:"servers" json:"servers"`
+		}{}
+		if err := unmarshal(&param); err != nil {
+			return err
+		}
+		s.Servers = make(ServerList, 0, len(param.Servers))
+		for _, server := range param.Servers {
+			s.Servers = append(s.Servers, server)
+		}
+	} else if kind == HTTP {
+
+	}
+	s.SchemaDescriptionBase = b
+	return nil
+}
 
 func (s ServerList) Validate() error {
 	for _, item := range s {
