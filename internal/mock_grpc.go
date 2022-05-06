@@ -234,14 +234,21 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 
 			if item.DefaultResponse != "" {
 				errors.New("default response is not supported")
-
-				if err := dynamicOutput.UnmarshalJSON([]byte(item.DefaultResponse)); err != nil {
+				v, err := GenerateDefaultTemplate(item.DefaultResponse)
+				if err != nil {
+					return fmt.Errorf("failed to generate default template response %s", err)
+				}
+				if err := dynamicOutput.UnmarshalJSON(v); err != nil {
 					return fmt.Errorf("server: %s method: %s, invalid default response %s, err: [%w]", serverSchema.Name, item.Name, item.DefaultResponse, err)
 				}
 			}
 
 			for _, v := range item.Conditions {
-				if err := dynamicOutput.UnmarshalJSON([]byte(v.Response)); err != nil {
+				str, err := GenerateDefaultTemplate(v.Response)
+				if err != nil {
+					return fmt.Errorf("failed to generate default template response %s", err)
+				}
+				if err := dynamicOutput.UnmarshalJSON(str); err != nil {
 					return fmt.Errorf("server: %s method: %s, invalid condition response %s, err: [%w]", serverSchema.Name, item.Name, v.Response, err)
 				}
 			}
@@ -289,8 +296,9 @@ func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
 		if err != nil {
 			return nil, fmt.Errorf("server: %s method: %s, err: [%w]", serviceDesc.ServiceName, methodDesc.GetName(), err)
 		}
+
 		if len(methodSchema.Conditions) == 0 {
-			return []byte(methodSchema.DefaultResponse), nil
+			return GenerateDefaultTemplate(methodSchema.DefaultResponse)
 		}
 
 		dynamicMsg, err := dynamic.AsDynamicMessage(inputParam)
@@ -314,12 +322,6 @@ func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
 					continue
 				}
 				fmt.Println("json value", g.GetInterface())
-				//t := g.ValueType()
-				//if t == jsoniter.StringValue {
-				//	paramValue[k] = fmt.Sprintf(`"%s"`, g.ToString())
-				//} else {
-				//	paramValue[k] = g.GetInterface()
-				//}
 				paramValue[k] = g.GetInterface()
 			}
 			if notFound || len(paramValue) == 0 {
@@ -339,10 +341,10 @@ func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
 				return nil, err
 			}
 			if result.(bool) == true {
-				return []byte(condition.Response), nil
+				return GenerateDefaultTemplate(condition.Response)
 			}
 		}
-		return []byte(methodSchema.DefaultResponse), nil
+		return GenerateDefaultTemplate(methodSchema.DefaultResponse)
 	}
 	return nil
 }

@@ -50,7 +50,9 @@ func TestServerDesc(t *testing.T) {
 
 							&ResponseConditionDescription{
 								Condition: `$request.id == 456`,
-								Response:  `{"studentList":[{"name":"123||456","age":123456}]}`,
+								Response: `{"studentList":[{"name":"{{RandFixLenString 3}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
+															{"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
+															{"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}]}`,
 							},
 						},
 					},
@@ -115,6 +117,7 @@ func TestValuate1(t *testing.T) {
 	for _, matchItem := range match {
 		t.Log(matchItem[idx])
 	}
+
 	str = strings.ReplaceAll(str, "$request.id", "123")
 	str = strings.ReplaceAll(str, "$request.name", `test`)
 	str = strings.ReplaceAll(str, "$request.t", `true`)
@@ -128,6 +131,41 @@ func TestValuate1(t *testing.T) {
 		t.Log(err)
 	}
 	t.Log(result)
+}
+
+func TestRe(t *testing.T) {
+
+	re = regexp.MustCompile(`.*{{.*}}.*`)
+	s := re.FindAllString("asdfP{{asdf", -1)
+	t.Log(s, len(s))
+
+	s = re.FindAllString("{{asdf}}", -1)
+	t.Log(s, len(s))
+
+	s = re.FindAllString("}}asdfasdf", -1)
+	t.Log(s, len(s))
+
+	s = re.FindAllString("}}asdfasdf", -1)
+	t.Log(s, len(s))
+
+	s = re.FindAllString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf", -1)
+	t.Log(s, len(s))
+
+	m := re.MatchString("asdfP{{asdf")
+	t.Log(m)
+
+	m = re.MatchString("{{asdf}}")
+	t.Log(m)
+
+	m = re.MatchString("}}asdfasdf")
+	t.Log(m)
+
+	m = re.MatchString("asdfP{{asdf")
+	t.Log(m)
+
+	m = re.MatchString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf")
+	t.Log(m)
+
 }
 
 func TestServer3(t *testing.T) {
