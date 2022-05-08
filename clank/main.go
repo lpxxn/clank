@@ -6,9 +6,16 @@ import (
 	"github.com/lpxxn/clank/internal"
 )
 
+var yamlPath string
+
+func init() {
+	flag.StringVar(&yamlPath, "yaml", "serv.yaml", "path to yaml file")
+}
+
 func main() {
-	yamlPath := flag.String("yaml", "serv.yaml", "path to yaml file")
-	servSchema, err := internal.LoadSchemaFromYaml(*yamlPath)
+	flag.Parse()
+
+	servSchema, err := internal.LoadSchemaFromYaml(yamlPath)
 	if err != nil {
 		panic(err)
 	}
