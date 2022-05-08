@@ -8,7 +8,7 @@ import (
 )
 
 func LoadSchemaFromYaml(filePath string) (*SchemaDescription, error) {
-	f, err := os.Open("grpc_serv.yaml")
+	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}

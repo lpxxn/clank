@@ -3,7 +3,6 @@ package internal
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -233,7 +232,6 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 			}
 
 			if item.DefaultResponse != "" {
-				errors.New("default response is not supported")
 				v, err := GenerateDefaultTemplate(item.DefaultResponse)
 				if err != nil {
 					return fmt.Errorf("failed to generate default template response %s", err)
