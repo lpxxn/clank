@@ -87,6 +87,16 @@ func TestServer2(t *testing.T) {
 	}
 }
 
+func TestTemplate(t *testing.T) {
+	str1 := `{"studentList":[{"name":"{{RandFixLenString 3}}","ids": {{RandInt64Slice 5}},"age":{{ RandInt32 }}}, 
+															{"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
+															{"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}]}`
+
+	b, err := GenerateDefaultTemplate(str1)
+
+	t.Logf("body: %s, err: %+v", string(b), err)
+}
+
 func TestValuate1(t *testing.T) {
 	expression, err := govaluate.NewEvaluableExpression("10 > 0")
 	if err != nil {

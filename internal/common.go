@@ -39,8 +39,22 @@ func GenerateTemplate(templateText string, templateData interface{}, params map[
 		"RandInt64": func() int64 {
 			return rand.Int63()
 		},
+		"RandInt64Slice": func(size int) []int64 {
+			var slice []int64
+			for i := 0; i < size; i++ {
+				slice = append(slice, rand.Int63())
+			}
+			return slice
+		},
 		"RandInt32": func() int32 {
 			return rand.Int31()
+		},
+		"RandInt32Slice": func(size int) []int32 {
+			var slice []int32
+			for i := 0; i < size; i++ {
+				slice = append(slice, rand.Int31())
+			}
+			return slice
 		},
 		"RandFixLenString": func(length int) string {
 			b := make([]rune, length)
