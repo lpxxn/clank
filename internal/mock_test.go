@@ -1,10 +1,12 @@
 package internal
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/Knetic/govaluate"
 )
@@ -93,8 +95,22 @@ func TestTemplate(t *testing.T) {
 															{"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}]}`
 
 	b, err := GenerateDefaultTemplate(str1)
+	t.Logf("body: %s, err: %+v", string(b), err)
+
+	str2 := `{"ids":{{RandInt64Slice 10}}}`
+	b, err = GenerateDefaultTemplate(str2)
 
 	t.Logf("body: %s, err: %+v", string(b), err)
+
+	temp, err := template.New("").Parse(`{{range .DataFields}}{{println "," .}} {{end}}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	if err := temp.Execute(&buf, map[string]interface{}{"DataFields": []string{"A", "B", "C"}}); err != nil {
+		t.Fatal(err)
+	}
+	t.Log(buf.String())
 }
 
 func TestValuate1(t *testing.T) {

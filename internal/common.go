@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -39,22 +40,22 @@ func GenerateTemplate(templateText string, templateData interface{}, params map[
 		"RandInt64": func() int64 {
 			return rand.Int63()
 		},
-		"RandInt64Slice": func(size int) []int64 {
-			var slice []int64
+		"RandInt64Slice": func(size int) string {
+			revSlice := make([]string, 0, size)
 			for i := 0; i < size; i++ {
-				slice = append(slice, rand.Int63())
+				revSlice = append(revSlice, fmt.Sprintf("%d", rand.Int63()))
 			}
-			return slice
+			return fmt.Sprintf("[%s]", strings.Join(revSlice, ","))
 		},
 		"RandInt32": func() int32 {
 			return rand.Int31()
 		},
-		"RandInt32Slice": func(size int) []int32 {
-			var slice []int32
+		"RandInt32Slice": func(size int) string {
+			revSlice := make([]string, 0, size)
 			for i := 0; i < size; i++ {
-				slice = append(slice, rand.Int31())
+				revSlice = append(revSlice, fmt.Sprintf("%d", rand.Int31()))
 			}
-			return slice
+			return fmt.Sprintf("[%s]", strings.Join(revSlice, ","))
 		},
 		"RandFixLenString": func(length int) string {
 			b := make([]rune, length)
