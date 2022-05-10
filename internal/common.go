@@ -40,6 +40,7 @@ func GenerateTemplate(templateText string, templateData interface{}, params map[
 		"RandInt64": func() int64 {
 			return rand.Int63()
 		},
+		// eg: [910709413461759461,5141766179235889031]
 		"RandInt64Slice": func(size int) string {
 			revSlice := make([]string, 0, size)
 			for i := 0; i < size; i++ {
