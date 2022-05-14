@@ -114,7 +114,7 @@ func TestDynamicProto(t *testing.T) {
 func CreateServiceDesc(fileDesc *desc.FileDescriptor) {
 	for _, servDescriptor := range fileDesc.GetServices() {
 		serviceDesc := grpc.ServiceDesc{
-			ServiceName: servDescriptor.GetFullyQualifiedName(),
+			ServiceName: servDescriptor.GetFullyQualifiedName(), // api.StudentSrv
 			Metadata:    fileDesc.GetName(),
 		}
 		unaryMethodMap[serviceDesc.ServiceName] = make(map[string]grpc.MethodDesc)
