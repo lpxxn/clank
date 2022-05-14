@@ -58,6 +58,7 @@ func TestParam(t *testing.T) {
 		t.Log(w.Body.String())
 		return true
 	})
+
 }
 
 // Helper function to process a request and test its response
@@ -70,4 +71,22 @@ func testHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *
 	if f != nil && !f(w) {
 		t.Fail()
 	}
+}
+
+func TestNoRouter(t *testing.T) {
+	path1 := "/restaurant/:id/order/:orderNo"
+	path2 := "/restaurant/:id/:action"
+	httpServ := &httpServer{
+		serverMethod: map[string]string{
+			path1: HTTPAnyMethod,
+			path2: HTTPPOSTMethod,
+		},
+		engine: gin.Default(),
+	}
+	httpServ.MethodHandler()
+	r, _ := http.NewRequest("GET", "/restaurant/1/order/2?a=v1&b=v2", strings.NewReader(`{"id": 1, "name": "Tom"}`))
+	testHTTPResponse(t, httpServ.engine, r, func(w *httptest.ResponseRecorder) bool {
+		t.Log(w.Body.String())
+		return true
+	})
 }
