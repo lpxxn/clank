@@ -14,7 +14,7 @@ import (
 var testEngine *gin.Engine
 
 func TestMain(m *testing.M) {
-	gin.SetMode(gin.TestMode)
+	gin.SetMode(gin.DebugMode)
 	testEngine = gin.Default()
 	testEngine.NoRoute(func(c *gin.Context) {
 		log.Printf("NoRoute: %s", c.Request.RequestURI)
@@ -39,6 +39,9 @@ func TestParam(t *testing.T) {
 		t.Logf("body: %s", string(body))
 		t.Logf("query: %s", c.Request.URL.RawQuery)
 	})
+	testEngine.Handle(HTTPAnyMethod, "/testAny", func(c *gin.Context) {
+		c.Writer.WriteString("testAny")
+	})
 	r, _ := http.NewRequest("GET", orderPath1, strings.NewReader(`{"name": "manu"}`))
 	testHTTPResponse(t, testEngine, r, func(w *httptest.ResponseRecorder) bool {
 		t.Log(w.Body.String())
@@ -47,6 +50,11 @@ func TestParam(t *testing.T) {
 
 	r = httptest.NewRequest("GET", "/restaurant/1/order/2?a=v1&b=v2", nil)
 	testHTTPResponse(t, testEngine, r, func(w *httptest.ResponseRecorder) bool {
+		t.Log(w.Body.String())
+		return true
+	})
+	rTestPath := httptest.NewRequest("GET", "/testAny", nil)
+	testHTTPResponse(t, testEngine, rTestPath, func(w *httptest.ResponseRecorder) bool {
 		t.Log(w.Body.String())
 		return true
 	})
