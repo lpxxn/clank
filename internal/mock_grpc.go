@@ -326,7 +326,7 @@ func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
 				continue
 			}
 			for k, v := range paramValue {
-				conditionStr = strings.ReplaceAll(conditionStr, requestToken+"."+k, fmt.Sprintf("%v", v))
+				conditionStr = strings.ReplaceAll(conditionStr, grpcRequestToken+"."+k, fmt.Sprintf("%v", v))
 			}
 			fmt.Println("conditionStr", conditionStr)
 			expression, err := govaluate.NewEvaluableExpression(conditionStr)

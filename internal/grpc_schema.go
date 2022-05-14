@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-const requestToken = "$request"
+const grpcRequestToken = "$request"
 
 type GrpcServerDescription struct {
 	Name    string                    `yaml¡:"name" json:"name"`
@@ -80,7 +80,7 @@ type GrpcMethodDescription struct {
 	Parameters      map[string]string                `yaml:"-" json:"-"`
 }
 
-var re = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
+var grpcParamRegex = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
 
 func (m *GrpcMethodDescription) Validate() error {
 	if m.Name == "" {
@@ -94,11 +94,11 @@ func (m *GrpcMethodDescription) Validate() error {
 		if c.Condition == "" || c.Response == "" {
 			return errors.New("condition or response is empty")
 		}
-		match := re.FindAllStringSubmatch(c.Condition, -1)
-		idx := re.SubexpIndex("parameter")
+		match := grpcParamRegex.FindAllStringSubmatch(c.Condition, -1)
+		idx := grpcParamRegex.SubexpIndex("parameter")
 		c.Parameters = map[string]struct{}{}
 		for _, matchItem := range match {
-			m.Parameters[requestToken+"."+matchItem[idx]] = matchItem[idx]
+			m.Parameters[grpcRequestToken+"."+matchItem[idx]] = matchItem[idx]
 			c.Parameters[matchItem[idx]] = struct{}{}
 			fmt.Println(matchItem[idx])
 		}

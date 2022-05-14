@@ -160,35 +160,35 @@ func TestValuate1(t *testing.T) {
 }
 
 func TestRe(t *testing.T) {
-	re = regexp.MustCompile(`.*{{.*}}.*`)
-	s := re.FindAllString("asdfP{{asdf", -1)
+	grpcParamRegex = regexp.MustCompile(`.*{{.*}}.*`)
+	s := grpcParamRegex.FindAllString("asdfP{{asdf", -1)
 	t.Log(s, len(s))
 
-	s = re.FindAllString("{{asdf}}", -1)
+	s = grpcParamRegex.FindAllString("{{asdf}}", -1)
 	t.Log(s, len(s))
 
-	s = re.FindAllString("}}asdfasdf", -1)
+	s = grpcParamRegex.FindAllString("}}asdfasdf", -1)
 	t.Log(s, len(s))
 
-	s = re.FindAllString("}}asdfasdf", -1)
+	s = grpcParamRegex.FindAllString("}}asdfasdf", -1)
 	t.Log(s, len(s))
 
-	s = re.FindAllString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf", -1)
+	s = grpcParamRegex.FindAllString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf", -1)
 	t.Log(s, len(s))
 
-	m := re.MatchString("asdfP{{asdf")
+	m := grpcParamRegex.MatchString("asdfP{{asdf")
 	t.Log(m)
 
-	m = re.MatchString("{{asdf}}")
+	m = grpcParamRegex.MatchString("{{asdf}}")
 	t.Log(m)
 
-	m = re.MatchString("}}asdfasdf")
+	m = grpcParamRegex.MatchString("}}asdfasdf")
 	t.Log(m)
 
-	m = re.MatchString("asdfP{{asdf")
+	m = grpcParamRegex.MatchString("asdfP{{asdf")
 	t.Log(m)
 
-	m = re.MatchString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf")
+	m = grpcParamRegex.MatchString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf")
 	t.Log(m)
 
 }
