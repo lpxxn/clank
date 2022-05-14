@@ -68,7 +68,7 @@ func TestServerDesc(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := ValidateServiceInputAndOutput(schema.Servers, ser); err != nil {
+	if err := ValidateGrpcServiceInputAndOutput(schema.Servers, ser); err != nil {
 		t.Fatal(err)
 	}
 	if err := SetOutputFunc(schema.Servers, ser); err != nil {

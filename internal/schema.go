@@ -56,7 +56,7 @@ func (s SchemaDescription) ValidateAndStartServer() error {
 		if err != nil {
 			return err
 		}
-		if err := ValidateServiceInputAndOutput(s.Servers, serv); err != nil {
+		if err := ValidateGrpcServiceInputAndOutput(s.Servers, serv); err != nil {
 			return err
 		}
 		if err := SetOutputFunc(s.Servers, serv); err != nil {

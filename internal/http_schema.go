@@ -4,6 +4,7 @@ import "errors"
 
 type httpServerDescriptor struct {
 	MethodDescriptor []*httpMethodDescriptor `yaml:"methods"`
+	methodMap        map[string]*httpMethodDescriptor
 }
 
 func (h *httpServerDescriptor) Validate() error {
@@ -14,8 +15,13 @@ func (h *httpServerDescriptor) Validate() error {
 		if err := m.Validate(); err != nil {
 			return err
 		}
+		h.methodMap[m.Path] = m
 	}
 	return nil
+}
+
+func (h *httpServerDescriptor) GetMethod(path string) *httpMethodDescriptor {
+	return h.methodMap[path]
 }
 
 type httpMethodDescriptor struct {
@@ -35,6 +41,9 @@ func (d *httpMethodDescriptor) Validate() error {
 	}
 	if d.Method == "" {
 		return errors.New("method is required")
+	}
+	if _, ok := methodMap[d.Method]; !ok {
+		return errors.New("method is invalid")
 	}
 	if d.DefaultResponse == "" {
 		return errors.New("defaultResponse is required")

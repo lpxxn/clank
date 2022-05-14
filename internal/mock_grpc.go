@@ -263,7 +263,7 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 	return nil
 }
 
-func ValidateServiceInputAndOutput(schemaList ServerList, gRpcServ *gRpcServer) error {
+func ValidateGrpcServiceInputAndOutput(schemaList ServerList, gRpcServ *gRpcServer) error {
 	grpcServersSchema := GrpcServerDescriptionList{}
 	for _, server := range schemaList {
 		if s, ok := server.(*GrpcServerDescription); ok {

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 var testEngine *gin.Engine
@@ -26,6 +27,37 @@ func TestMain(m *testing.M) {
 		c.String(http.StatusOK, "NoMethod")
 	})
 	os.Exit(m.Run())
+}
+
+func TestSchema1(t *testing.T) {
+	httpDescriptor := &httpServerDescriptor{MethodDescriptor: []*httpMethodDescriptor{
+		{
+			Name:   "testApi",
+			Path:   "/test",
+			Method: HTTPPOSTMethod,
+			DefaultResponse: `{"code": 0,"message": "success",
+				"data": {"name": "Jerry","age": 18}
+			}`,
+		},
+		{
+			Name:   "testApi2",
+			Path:   "user/:userID/order/:orderNo",
+			Method: HTTPPOSTMethod,
+			DefaultResponse: `{
+				"code": 0,
+				"message": "success",
+				"data": {
+					"orderNo": "$path.orderNo",
+					"userID": "$path.userID"
+					"desc": "{{RandString 5 20}}"
+				}
+			}`,
+		},
+	}}
+	assert.Nil(t, httpDescriptor.Validate())
+
+	serv := NewHttpServer(httpDescriptor)
+	assert.NotNil(t, serv)
 }
 
 func TestParam(t *testing.T) {

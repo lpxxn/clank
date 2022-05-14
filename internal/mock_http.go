@@ -33,6 +33,7 @@ type httpServer struct {
 	// map[fullPath]HttpMethod
 	serverMethod map[string]string
 	engine       *gin.Engine
+	descriptor   *httpServerDescriptor
 }
 
 func NewHttpServer(desc *httpServerDescriptor) *httpServer {
