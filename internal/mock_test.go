@@ -160,7 +160,6 @@ func TestValuate1(t *testing.T) {
 }
 
 func TestRe(t *testing.T) {
-
 	re = regexp.MustCompile(`.*{{.*}}.*`)
 	s := re.FindAllString("asdfP{{asdf", -1)
 	t.Log(s, len(s))

@@ -30,14 +30,13 @@ var methodMap map[string]string = map[string]string{
 }
 
 type httpServer struct {
-	name string
 	// map[fullPath]HttpMethod
 	serverMethod map[string]string
 	engine       *gin.Engine
 }
 
 func NewHttpServer(desc *httpServerDescriptor) *httpServer {
-	rev := &httpServer{name: desc.Name, engine: gin.Default(), serverMethod: map[string]string{}}
+	rev := &httpServer{engine: gin.Default(), serverMethod: map[string]string{}}
 	for _, item := range desc.MethodDescriptor {
 		rev.serverMethod[item.Path] = item.Method
 	}
@@ -61,8 +60,11 @@ func (h *httpServer) NotFoundHandler(c *gin.Context) {
 	c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
 }
 func (h *httpServer) commonHandler(c *gin.Context) {
-	log.Println("method: ", c.Request.Method, " path: ", c.Request.URL.Path)
-
+	//log.Println("method: ", c.Request.Method, " path: ", c.Request.URL.Path)
+	if _, ok := h.serverMethod[c.FullPath()]; !ok {
+		c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
+		return
+	}
 	log.Printf("fullPath: %s, gin.fullPath: %s", c.Request.URL.RawPath, c.FullPath())
 	rCopy := CopyHttpRequest(c.Request)
 	rBody, _ := io.ReadAll(rCopy.Body)

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -89,4 +90,15 @@ func TestNoRouter(t *testing.T) {
 		t.Log(w.Body.String())
 		return true
 	})
+}
+
+func TestHttpRegex(t *testing.T) {
+	re = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
+
+	str := `$body.name=$param.id,abcdef`
+	match := re.FindAllStringSubmatch(str, -1)
+	idx := re.SubexpIndex("parameter")
+	for _, matchItem := range match {
+		t.Log(matchItem[idx])
+	}
 }
