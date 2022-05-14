@@ -6,6 +6,8 @@ import (
 	"regexp"
 )
 
+const requestToken = "$request"
+
 type GrpcServerDescription struct {
 	Name    string                    `yaml¡:"name" json:"name"`
 	Methods GrpcMethodDescriptionList `yaml:"methods" json:"methods"`

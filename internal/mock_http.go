@@ -29,21 +29,19 @@ var methodMap map[string]string = map[string]string{
 	"PUT":    HTTPPUTMethod,
 }
 
-type httpServerDescriptor struct {
-	Names            string
-	methodDescriptor []*httpMethodDescriptor
-}
-
-type httpMethodDescriptor struct {
-	Name     string
-	FullPath string
-	Method   string
-}
-
 type httpServer struct {
+	name string
 	// map[fullPath]HttpMethod
 	serverMethod map[string]string
 	engine       *gin.Engine
+}
+
+func NewHttpServer(desc *httpServerDescriptor) *httpServer {
+	rev := &httpServer{name: desc.Name, engine: gin.Default(), serverMethod: map[string]string{}}
+	for _, item := range desc.MethodDescriptor {
+		rev.serverMethod[item.Path] = item.Method
+	}
+	return rev
 }
 
 func (h *httpServer) MethodHandler() error {

@@ -6,8 +6,6 @@ import (
 	jsonIter "github.com/json-iterator/go"
 )
 
-const requestToken = "$request"
-
 var jsonIterator = jsonIter.ConfigCompatibleWithStandardLibrary
 
 type SchemaDescriptionBase struct {
