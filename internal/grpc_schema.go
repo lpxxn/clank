@@ -80,7 +80,7 @@ type GrpcMethodDescription struct {
 	Parameters      map[string]string                `yaml:"-" json:"-"`
 }
 
-var grpcParamRegex = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
+var httpParamRegex = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
 
 func (m *GrpcMethodDescription) Validate() error {
 	if m.Name == "" {
@@ -94,8 +94,8 @@ func (m *GrpcMethodDescription) Validate() error {
 		if c.Condition == "" || c.Response == "" {
 			return errors.New("condition or response is empty")
 		}
-		match := grpcParamRegex.FindAllStringSubmatch(c.Condition, -1)
-		idx := grpcParamRegex.SubexpIndex("parameter")
+		match := httpParamRegex.FindAllStringSubmatch(c.Condition, -1)
+		idx := httpParamRegex.SubexpIndex("parameter")
 		c.Parameters = map[string]struct{}{}
 		for _, matchItem := range match {
 			m.Parameters[grpcRequestToken+"."+matchItem[idx]] = matchItem[idx]

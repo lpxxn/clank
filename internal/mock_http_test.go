@@ -93,11 +93,11 @@ func TestNoRouter(t *testing.T) {
 }
 
 func TestHttpRegex(t *testing.T) {
-	grpcParamRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
+	httpParamRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
 
 	str := `$body.name=$param.id || "$abcdef.eeeee" = 1334`
-	match := grpcParamRegex.FindAllStringSubmatch(str, -1)
-	idx := grpcParamRegex.SubexpIndex("parameter")
+	match := httpParamRegex.FindAllStringSubmatch(str, -1)
+	idx := httpParamRegex.SubexpIndex("parameter")
 	for _, matchItem := range match {
 		t.Log(matchItem[idx])
 	}
