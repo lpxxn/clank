@@ -34,10 +34,12 @@ type httpServer struct {
 	// map[fullPath]HttpMethod
 	serverMethod map[string]string
 	engine       *gin.Engine
+	getResponse  func(methodName string, jBody string) (string, error)
 }
 
 func NewHttpServer(desc *httpServerDescriptor) *httpServer {
-	rev := &httpServer{engine: gin.Default(), serverMethod: map[string]string{}}
+	rev := &httpServer{engine: gin.Default(), serverMethod: map[string]string{},
+		getResponse: desc.GetResponse}
 	for _, item := range desc.MethodDescriptor {
 		rev.serverMethod[item.Path] = item.Method
 	}
@@ -91,6 +93,13 @@ func metadataHandler(c *gin.Context) {
 	c.Set("metadata", jBody)
 	c.Next()
 }
+func MustGetJBody(c *gin.Context) string {
+	jBody, ok := c.Get("metadata")
+	if !ok {
+		return ``
+	}
+	return jBody.(string)
+}
 
 func (h *httpServer) NotFoundHandler(c *gin.Context) {
 	c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
@@ -101,13 +110,12 @@ func (h *httpServer) commonHandler(c *gin.Context) {
 		c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
 		return
 	}
-	log.Printf("fullPath: %s, gin.fullPath: %s", c.Request.URL.RawPath, c.FullPath())
-	rCopy := CopyHttpRequest(c.Request)
-	rBody, _ := io.ReadAll(rCopy.Body)
-	log.Printf("body: %s", rBody)
-	b, _ := c.GetRawData()
-	log.Printf("body: %s", b)
-	c.String(http.StatusOK, "hello world")
+	resp, err := h.getResponse(c.FullPath(), MustGetJBody(c))
+	if err != nil {
+		c.String(http.StatusExpectationFailed, err.Error())
+		return
+	}
+	c.String(http.StatusOK, resp)
 }
 
 func (h *httpServer) StartWithPort(port int) error {

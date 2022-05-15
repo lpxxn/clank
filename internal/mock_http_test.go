@@ -48,8 +48,8 @@ func TestSchema1(t *testing.T) {
 				"code": 0,
 				"message": "success",
 				"data": {
-					"orderNo": "$path.orderNo",
-					"userID": "$path.userID"
+					"orderNo": "$param.orderNo",
+					"userID": $param.userID,
 					"desc": "{{RandString 5 20}}"
 				}
 			}`,
@@ -140,11 +140,11 @@ func TestNoRouter(t *testing.T) {
 }
 
 func TestHttpRegex(t *testing.T) {
-	httpParamRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
+	regex := regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
 
 	str := `$body.name=$param.id || "$abcdef.eeeee" = 1334`
-	match := httpParamRegex.FindAllStringSubmatch(str, -1)
-	idx := httpParamRegex.SubexpIndex("parameter")
+	match := regex.FindAllStringSubmatch(str, -1)
+	idx := regex.SubexpIndex("parameter")
 	for _, matchItem := range match {
 		t.Log(matchItem[idx])
 	}

@@ -131,9 +131,10 @@ func (s ServerList) Validate() error {
 type ResponseConditionDescriptionList []*ResponseConditionDescription
 
 type ResponseConditionDescription struct {
-	Condition  string              `yaml:"condition" json:"condition"`
-	Response   string              `yaml:"response" json:"response"`
-	Parameters map[string]struct{} `yaml:"-" json:"-"`
+	Condition          string              `yaml:"condition" json:"condition"`
+	Response           string              `yaml:"response" json:"response"`
+	Parameters         map[string]struct{} `yaml:"-" json:"-"`
+	ResponseParameters map[string]struct{} `yaml:"-" json:"-"`
 }
 
 type CallbackRequest interface {

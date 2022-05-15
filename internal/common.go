@@ -23,6 +23,11 @@ func GenerateDefaultTemplate(templateText string) ([]byte, error) {
 	return GenerateTemplate(templateText, nil, nil)
 }
 
+func GenerateDefaultStringTemplate(templateText string) (string, error) {
+	rev, err := GenerateTemplate(templateText, nil, nil)
+	return string(rev), err
+}
+
 func GenerateTemplate(templateText string, templateData interface{}, params map[string]interface{}) ([]byte, error) {
 	if !templateRe.MatchString(templateText) {
 		return []byte(templateText), nil

@@ -160,35 +160,35 @@ func TestValuate1(t *testing.T) {
 }
 
 func TestRe(t *testing.T) {
-	httpParamRegex = regexp.MustCompile(`.*{{.*}}.*`)
-	s := httpParamRegex.FindAllString("asdfP{{asdf", -1)
+	grpcParamRegex = regexp.MustCompile(`.*{{.*}}.*`)
+	s := grpcParamRegex.FindAllString("asdfP{{asdf", -1)
 	t.Log(s, len(s))
 
-	s = httpParamRegex.FindAllString("{{asdf}}", -1)
+	s = grpcParamRegex.FindAllString("{{asdf}}", -1)
 	t.Log(s, len(s))
 
-	s = httpParamRegex.FindAllString("}}asdfasdf", -1)
+	s = grpcParamRegex.FindAllString("}}asdfasdf", -1)
 	t.Log(s, len(s))
 
-	s = httpParamRegex.FindAllString("}}asdfasdf", -1)
+	s = grpcParamRegex.FindAllString("}}asdfasdf", -1)
 	t.Log(s, len(s))
 
-	s = httpParamRegex.FindAllString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf", -1)
+	s = grpcParamRegex.FindAllString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf", -1)
 	t.Log(s, len(s))
 
-	m := httpParamRegex.MatchString("asdfP{{asdf")
+	m := grpcParamRegex.MatchString("asdfP{{asdf")
 	t.Log(m)
 
-	m = httpParamRegex.MatchString("{{asdf}}")
+	m = grpcParamRegex.MatchString("{{asdf}}")
 	t.Log(m)
 
-	m = httpParamRegex.MatchString("}}asdfasdf")
+	m = grpcParamRegex.MatchString("}}asdfasdf")
 	t.Log(m)
 
-	m = httpParamRegex.MatchString("asdfP{{asdf")
+	m = grpcParamRegex.MatchString("asdfP{{asdf")
 	t.Log(m)
 
-	m = httpParamRegex.MatchString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf")
+	m = grpcParamRegex.MatchString("asdfas{{asdf}}sdafas{{asdfs}}asdf}}asdf")
 	t.Log(m)
 
 }
