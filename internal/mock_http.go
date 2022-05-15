@@ -9,6 +9,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/google/go-cmp/cmp"
 	"github.com/tidwall/sjson"
 )
 
@@ -72,7 +74,6 @@ func metadataHandler(c *gin.Context) {
 	for key, value := range c.Request.URL.Query() {
 		query[key] = value[0]
 	}
-	body, _ := io.ReadAll(CopyHttpRequest(c.Request).Body)
 	form := map[string]interface{}{}
 	for k, v := range c.Request.Form {
 		form[k] = v[0]
@@ -83,13 +84,25 @@ func metadataHandler(c *gin.Context) {
 	if jBody, err = sjson.Set(jBody, "query", query); err != nil {
 		c.Writer.WriteString(err.Error())
 	}
-	if jBody, err = sjson.Set(jBody, "body", string(body)); err != nil {
-		c.Writer.WriteString(err.Error())
-	}
+
 	if jBody, err = sjson.Set(jBody, "form", form); err != nil {
 		c.Writer.WriteString(err.Error())
 	}
 	log.Printf("jBody: %s", jBody)
+	copyReq := CopyHttpRequest(c.Request)
+	if copyReq.Body != nil {
+		b := binding.Default(c.Request.Method, c.ContentType())
+		if !cmp.Equal(b, binding.Form) {
+			bodyMap := map[string]interface{}{}
+			if err := b.Bind(copyReq, &bodyMap); err != nil {
+				c.String(http.StatusBadRequest, err.Error())
+				return
+			}
+			if jBody, err = sjson.Set(jBody, "body", bodyMap); err != nil {
+				c.Writer.WriteString(err.Error())
+			}
+		}
+	}
 	c.Set("metadata", jBody)
 	c.Next()
 }

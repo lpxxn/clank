@@ -83,13 +83,11 @@ func (h *httpServerDescriptor) GetResponse(methodName string, jBody string) (str
 		if condition.Condition == "" {
 			continue
 		}
-		if condition.Condition == "" {
-			return condition.Response, nil
-		}
 		conditionStr := condition.Condition
 		paramValue, err := ParamValue(condition.Parameters, jBody)
 		if err != nil {
-			return "", err
+			log.Println(err)
+			continue
 		}
 		if len(paramValue) != len(condition.Parameters) {
 			return h.getResponse(method, condition, method.DefaultResponse, jBody)
@@ -98,9 +96,15 @@ func (h *httpServerDescriptor) GetResponse(methodName string, jBody string) (str
 			conditionStr = strings.ReplaceAll(conditionStr, "$"+k, fmt.Sprintf("%v", v))
 		}
 		log.Printf("condition: %s", conditionStr)
-		return h.getResponse(method, condition, conditionStr, jBody)
+		result, err := ValuableBoolExpression(conditionStr)
+		if err != nil {
+			return "", err
+		}
+		if result {
+			return h.getResponse(method, condition, condition.Response, jBody)
+		}
 	}
-	return method.DefaultResponse, nil
+	return h.getResponse(method, nil, method.DefaultResponse, jBody)
 }
 
 func (h *httpServerDescriptor) getResponse(method *httpMethodDescriptor, condition *ResponseConditionDescription, body string, jBody string) (string, error) {

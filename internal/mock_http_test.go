@@ -45,14 +45,73 @@ func TestSchema1(t *testing.T) {
 			Path:   "/user/:userID/order/:orderNo",
 			Method: HTTPPOSTMethod,
 			DefaultResponse: `{
-				"code": 0,
-				"message": "success",
+				"code": 0, "message": "success",
 				"data": {
 					"orderNo": "$param.orderNo",
 					"userID": $param.userID,
 					"desc": "{{RandString 5 20}}"
 				}
 			}`,
+		},
+		{
+			Name:   "testApi2",
+			Path:   "/user/:userID/createOrder",
+			Method: HTTPPOSTMethod,
+			DefaultResponse: `{
+				"code": 0, "message": "success",
+				"data": {
+					"orderNo": "OrderNo{{RandString 5 10}}",
+					"userID": $param.userID,
+					"desc": "{{RandString 5 20}}"
+				}
+			}`,
+			Conditions: ResponseConditionDescriptionList{
+				{
+					Condition: "$query.userID == 1",
+					Response: `{
+						"code": 0, "message": "success",
+						"data": {
+							"orderNo": "OrderNo{{RandString 5 10}}",
+							"userID": $query.userID,
+							"desc": "query.userID == 1"
+						}
+					}`,
+				},
+				{
+					Condition: "$param.userID == 1",
+					Response: `{
+						"code": 0, "message": "success",
+						"data": {
+							"orderNo": "OrderNo{{RandString 5 10}}",
+							"userID": $param.userID,
+							"desc": "param.userID == 1"
+						}
+					}`,
+				},
+				{
+					Condition: "$body.userID == 1 && $query.userID == 2",
+					Response: `{
+						"code": 0, "message": "success",
+						"data": {
+							"orderNo": "OrderNo{{RandString 5 10}}",
+							"userID": $param.userID,
+							"queryUserID": $query.userID,
+							"desc": "body.userID == 1&& query.userID == 2"
+						}
+					}`,
+				},
+				{
+					Condition: "$body.userID == 1",
+					Response: `{
+						"code": 0, "message": "success",
+						"data": {
+							"orderNo": "OrderNo{{RandString 5 10}}",
+							"userID": $param.userID,
+							"desc": "$body.userID == 1""
+						}
+					}`,
+				},
+			},
 		},
 	}}
 	assert.Nil(t, httpDescriptor.Validate())
@@ -63,6 +122,28 @@ func TestSchema1(t *testing.T) {
 	form := url.Values{"name": {"Jerry"}, "age": {"18"}}
 	r, _ := http.NewRequest(HTTPPOSTMethod, "/user/1233/order/13", strings.NewReader(form.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	testHTTPResponse(t, serv.engine, r, func(w *httptest.ResponseRecorder) bool {
+		t.Log(w.Body.String())
+		return true
+	})
+
+	form = url.Values{"name": {"Jerry"}, "age": {"18"}, "userID": {"1"}}
+	r, _ = http.NewRequest(HTTPPOSTMethod, "/user/1233/createOrder?userID=2", strings.NewReader(form.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	testHTTPResponse(t, serv.engine, r, func(w *httptest.ResponseRecorder) bool {
+		t.Log(w.Body.String())
+		return true
+	})
+
+	r, _ = http.NewRequest(HTTPPOSTMethod, "/user/1233/createOrder?userID=1", nil)
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	testHTTPResponse(t, serv.engine, r, func(w *httptest.ResponseRecorder) bool {
+		t.Log(w.Body.String())
+		return true
+	})
+
+	r, _ = http.NewRequest(HTTPPOSTMethod, "/user/1233/createOrder?userID=2", strings.NewReader(`{"name": "Jerry", "age": 18, "userID": 1}`))
+	r.Header.Set("Content-Type", "application/json")
 	testHTTPResponse(t, serv.engine, r, func(w *httptest.ResponseRecorder) bool {
 		t.Log(w.Body.String())
 		return true

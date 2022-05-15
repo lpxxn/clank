@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Knetic/govaluate"
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/jhump/protoreflect/desc"
@@ -329,16 +328,12 @@ func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
 				conditionStr = strings.ReplaceAll(conditionStr, grpcRequestToken+"."+k, fmt.Sprintf("%v", v))
 			}
 			fmt.Println("conditionStr", conditionStr)
-			expression, err := govaluate.NewEvaluableExpression(conditionStr)
+			result, err := ValuableBoolExpression(conditionStr)
 			if err != nil {
 				return nil, err
 			}
-			result, err := expression.Evaluate(nil)
-			fmt.Println("evaluate result", result, err)
-			if err != nil {
-				return nil, err
-			}
-			if result.(bool) == true {
+
+			if result == true {
 				return GenerateDefaultTemplate(condition.Response)
 			}
 		}

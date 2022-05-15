@@ -8,6 +8,8 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/Knetic/govaluate"
 )
 
 const (
@@ -129,4 +131,17 @@ func ParamValue(param map[string]struct{}, jBody string) (map[string]interface{}
 		paramValue[key] = v.GetInterface()
 	}
 	return paramValue, nil
+}
+
+func ValuableBoolExpression(expressionStr string) (bool, error) {
+	expression, err := govaluate.NewEvaluableExpression(expressionStr)
+	if err != nil {
+		return false, err
+	}
+	result, err := expression.Evaluate(nil)
+	fmt.Println("evaluate result", result, err)
+	if err != nil {
+		return false, err
+	}
+	return result.(bool), nil
 }

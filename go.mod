@@ -6,6 +6,7 @@ require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
 	github.com/golang/protobuf v1.5.2
+	github.com/google/go-cmp v0.5.5
 	github.com/jhump/protoreflect v1.12.0
 	github.com/json-iterator/go v1.1.12
 	github.com/stretchr/testify v1.7.1
