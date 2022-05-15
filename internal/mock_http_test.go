@@ -42,7 +42,7 @@ func TestSchema1(t *testing.T) {
 		},
 		{
 			Name:   "testApi2",
-			Path:   "user/:userID/order/:orderNo",
+			Path:   "/user/:userID/order/:orderNo",
 			Method: HTTPPOSTMethod,
 			DefaultResponse: `{
 				"code": 0,
@@ -61,7 +61,7 @@ func TestSchema1(t *testing.T) {
 	assert.NotNil(t, serv)
 	assert.Nil(t, serv.MethodHandler())
 	form := url.Values{"name": {"Jerry"}, "age": {"18"}}
-	r, _ := http.NewRequest(HTTPPOSTMethod, "user/1233/order/13", strings.NewReader(form.Encode()))
+	r, _ := http.NewRequest(HTTPPOSTMethod, "/user/1233/order/13", strings.NewReader(form.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	testHTTPResponse(t, serv.engine, r, func(w *httptest.ResponseRecorder) bool {
 		t.Log(w.Body.String())

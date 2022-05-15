@@ -61,17 +61,17 @@ func metadataHandler(c *gin.Context) {
 	c.Request.ParseForm()
 	jBody := ``
 	var err error
-	param := map[string]string{}
+	param := map[string]interface{}{}
 	for _, item := range c.Params {
 		param[item.Key] = item.Value
 	}
 
-	query := map[string]string{}
+	query := map[string]interface{}{}
 	for key, value := range c.Request.URL.Query() {
 		query[key] = value[0]
 	}
 	body, _ := io.ReadAll(CopyHttpRequest(c.Request).Body)
-	form := map[string]string{}
+	form := map[string]interface{}{}
 	for k, v := range c.Request.Form {
 		form[k] = v[0]
 	}
