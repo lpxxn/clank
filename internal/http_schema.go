@@ -11,6 +11,9 @@ func (h *httpServerDescriptor) Validate() error {
 	if len(h.MethodDescriptor) == 0 {
 		return errors.New("no methods defined")
 	}
+	if h.methodMap == nil {
+		h.methodMap = make(map[string]*httpMethodDescriptor)
+	}
 	for _, m := range h.MethodDescriptor {
 		if err := m.Validate(); err != nil {
 			return err
