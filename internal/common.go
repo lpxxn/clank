@@ -109,3 +109,24 @@ func GenerateTemplate(templateText string, templateData interface{}, params map[
 	}
 	return buf.Bytes(), nil
 }
+
+func ParametersFromStr(str string) map[string]struct{} {
+	parameters := make(map[string]struct{})
+	match := httpRegex.FindAllStringSubmatch(str, -1)
+	idx := httpRegex.SubexpIndex("parameter")
+	for _, matchItem := range match {
+		parameters[matchItem[idx]] = struct{}{}
+	}
+	return parameters
+}
+func ParamValue(param map[string]struct{}, jBody string) (map[string]interface{}, error) {
+	paramValue := map[string]interface{}{}
+	for key, _ := range param {
+		v := jsonIterator.Get([]byte(jBody), keysInterfaceSlice(key)...)
+		if v.LastError() != nil {
+			return paramValue, v.LastError()
+		}
+		paramValue[key] = v.GetInterface()
+	}
+	return paramValue, nil
+}
