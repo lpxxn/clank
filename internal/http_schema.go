@@ -86,7 +86,7 @@ func ParametersFromStr(str string) map[string]struct{} {
 func ParamValue(param map[string]struct{}, jBody string) (map[string]interface{}, error) {
 	paramValue := map[string]interface{}{}
 	for key, _ := range param {
-		v := jsonIterator.Get([]byte(jBody), key)
+		v := jsonIterator.Get([]byte(jBody), keysInterfaceSlice(key)...)
 		if v.LastError() != nil {
 			return paramValue, v.LastError()
 		}
@@ -98,7 +98,7 @@ func ParamValue(param map[string]struct{}, jBody string) (map[string]interface{}
 func (h *httpServerDescriptor) GetResponse(methodName string, jBody string) (string, error) {
 	method := h.methodMap[methodName]
 	if len(method.Conditions) == 0 {
-		return h.getResponse(nil, method.DefaultResponse, jBody)
+		return h.getResponse(method, nil, method.DefaultResponse, jBody)
 	}
 	for _, condition := range method.Conditions {
 		if condition.Condition == "" {
@@ -113,31 +113,39 @@ func (h *httpServerDescriptor) GetResponse(methodName string, jBody string) (str
 			return "", err
 		}
 		if len(paramValue) != len(condition.Parameters) {
-			return h.getResponse(nil, method.DefaultResponse, jBody)
+			return h.getResponse(method, condition, method.DefaultResponse, jBody)
 		}
 		for k, v := range paramValue {
 			conditionStr = strings.ReplaceAll(conditionStr, "$"+k, fmt.Sprintf("%v", v))
 		}
 		log.Printf("condition: %s", conditionStr)
-		return h.getResponse(condition, conditionStr, jBody)
+		return h.getResponse(method, condition, conditionStr, jBody)
 	}
 	return method.DefaultResponse, nil
 }
 
-func (h *httpServerDescriptor) getResponse(condition *ResponseConditionDescription, body string, jBody string) (string, error) {
-	if condition == nil || len(condition.ResponseParameters) == 0 {
+func (h *httpServerDescriptor) getResponse(method *httpMethodDescriptor, condition *ResponseConditionDescription, body string, jBody string) (string, error) {
+	if condition == nil {
+		return h.getResponseByParameters(body, jBody, method.responseParameters)
+	}
+
+	return h.getResponseByParameters(body, jBody, condition.ResponseParameters)
+}
+
+func (h *httpServerDescriptor) getResponseByParameters(body string, jBody string, parameters map[string]struct{}) (string, error) {
+	if len(parameters) == 0 {
 		return GenerateDefaultStringTemplate(body)
 	}
-	conditionStr := body
-	paramValue, err := ParamValue(condition.ResponseParameters, jBody)
+	paramValue, err := ParamValue(parameters, jBody)
 	if err != nil {
 		return "", err
 	}
-	if len(paramValue) != len(condition.ResponseParameters) {
-		return "", fmt.Errorf("http response %s parameters %+v is not foud", body, condition.ResponseParameters)
+	if len(paramValue) != len(parameters) {
+		return "", fmt.Errorf("response parameters is not match, response: %s, param: %+v", body, parameters)
 	}
+	conditionStr := body
 	for k, v := range paramValue {
-		conditionStr = strings.ReplaceAll(conditionStr, grpcRequestToken+"."+k, fmt.Sprintf("%v", v))
+		conditionStr = strings.ReplaceAll(conditionStr, "$"+k, fmt.Sprintf("%v", v))
 	}
 	return GenerateDefaultStringTemplate(conditionStr)
 }
