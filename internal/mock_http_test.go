@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -58,6 +59,14 @@ func TestSchema1(t *testing.T) {
 
 	serv := NewHttpServer(httpDescriptor)
 	assert.NotNil(t, serv)
+	assert.Nil(t, serv.MethodHandler())
+	form := url.Values{"name": {"Jerry"}, "age": {"18"}}
+	r, _ := http.NewRequest(HTTPPOSTMethod, "user/1233/order/13", strings.NewReader(form.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	testHTTPResponse(t, serv.engine, r, func(w *httptest.ResponseRecorder) bool {
+		t.Log(w.Body.String())
+		return true
+	})
 }
 
 func TestParam(t *testing.T) {
@@ -117,7 +126,13 @@ func TestNoRouter(t *testing.T) {
 		engine: gin.Default(),
 	}
 	httpServ.MethodHandler()
-	r, _ := http.NewRequest("GET", "/restaurant/1/order/2?a=v1&b=v2", strings.NewReader(`{"id": 1, "name": "Tom"}`))
+	r, _ := http.NewRequest(HTTPPOSTMethod, "/restaurant/1/order/2?a=v1&b=v2", strings.NewReader(`{"id": 1, "name": "Tom"}`))
+	testHTTPResponse(t, httpServ.engine, r, func(w *httptest.ResponseRecorder) bool {
+		t.Log(w.Body.String())
+		return true
+	})
+
+	r, _ = http.NewRequest(HTTPPOSTMethod, "/restaurant/1/2?a=v1&b=v2", strings.NewReader(`{"id": 1, "name": "Tom"}`))
 	testHTTPResponse(t, httpServ.engine, r, func(w *httptest.ResponseRecorder) bool {
 		t.Log(w.Body.String())
 		return true

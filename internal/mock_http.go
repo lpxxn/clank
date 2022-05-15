@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tidwall/sjson"
 )
 
 const (
@@ -33,7 +34,6 @@ type httpServer struct {
 	// map[fullPath]HttpMethod
 	serverMethod map[string]string
 	engine       *gin.Engine
-	descriptor   *httpServerDescriptor
 }
 
 func NewHttpServer(desc *httpServerDescriptor) *httpServer {
@@ -49,12 +49,47 @@ func (h *httpServer) MethodHandler() error {
 	h.engine.NoMethod(h.NotFoundHandler)
 	for path, method := range h.serverMethod {
 		if method == HTTPAnyMethod {
-			h.engine.Any(path, h.commonHandler)
+			h.engine.Any(path, metadataHandler, h.commonHandler)
 		} else {
-			h.engine.Handle(method, path, h.commonHandler)
+			h.engine.Handle(method, path, metadataHandler, h.commonHandler)
 		}
 	}
 	return nil
+}
+
+func metadataHandler(c *gin.Context) {
+	c.Request.ParseForm()
+	jBody := ``
+	var err error
+	param := map[string]string{}
+	for _, item := range c.Params {
+		param[item.Key] = item.Value
+	}
+
+	query := map[string]string{}
+	for key, value := range c.Request.URL.Query() {
+		query[key] = value[0]
+	}
+	body, _ := io.ReadAll(CopyHttpRequest(c.Request).Body)
+	form := map[string]string{}
+	for k, v := range c.Request.Form {
+		form[k] = v[0]
+	}
+	if jBody, err = sjson.Set(jBody, "param", param); err != nil {
+		c.Writer.WriteString(err.Error())
+	}
+	if jBody, err = sjson.Set(jBody, "query", query); err != nil {
+		c.Writer.WriteString(err.Error())
+	}
+	if jBody, err = sjson.Set(jBody, "body", string(body)); err != nil {
+		c.Writer.WriteString(err.Error())
+	}
+	if jBody, err = sjson.Set(jBody, "form", form); err != nil {
+		c.Writer.WriteString(err.Error())
+	}
+	log.Printf("jBody: %s", jBody)
+	c.Set("metadata", jBody)
+	c.Next()
 }
 
 func (h *httpServer) NotFoundHandler(c *gin.Context) {
