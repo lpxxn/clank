@@ -1,36 +1,35 @@
 package internal
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lpxxn/clank/internal/clanklog"
 	"github.com/stretchr/testify/assert"
 )
 
 var testEngine *gin.Engine
 
-func TestMain(m *testing.M) {
+func initGin() {
 	gin.SetMode(gin.DebugMode)
 	testEngine = gin.Default()
 	testEngine.NoRoute(func(c *gin.Context) {
-		log.Printf("NoRoute: %s", c.Request.RequestURI)
+		clanklog.Infof("NoRoute: %s", c.Request.RequestURI)
 		c.String(http.StatusOK, "NoRoute")
 	})
 	testEngine.NoMethod(func(c *gin.Context) {
-		log.Printf("NoMethod: %s", c.Request.RequestURI)
+		clanklog.Infof("NoMethod: %s", c.Request.RequestURI)
 		c.String(http.StatusOK, "NoMethod")
 	})
-	os.Exit(m.Run())
 }
 
 func TestSchema1(t *testing.T) {
+	initGin()
 	httpDescriptor := &httpServerDescriptor{MethodDescriptor: []*httpMethodDescriptor{
 		{
 			Name:   "testApi",
@@ -151,6 +150,8 @@ func TestSchema1(t *testing.T) {
 }
 
 func TestParam(t *testing.T) {
+	initGin()
+
 	orderPath1 := "/restaurant/:id/order/:orderNo"
 	testEngine.Any(orderPath1, func(c *gin.Context) {
 		t.Log(c.Params)
@@ -197,6 +198,8 @@ func testHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *
 }
 
 func TestNoRouter(t *testing.T) {
+	initGin()
+
 	path1 := "/restaurant/:id/order/:orderNo"
 	path2 := "/restaurant/:id/:action"
 	httpServ := &httpServer{
@@ -221,6 +224,8 @@ func TestNoRouter(t *testing.T) {
 }
 
 func TestHttpRegex(t *testing.T) {
+	initGin()
+
 	regex := regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
 
 	str := `$body.name=$param.id || "$abcdef.eeeee" = 1334`

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/go-cmp/cmp"
+	"github.com/lpxxn/clank/internal/clanklog"
 	"github.com/tidwall/sjson"
 )
 
@@ -88,7 +88,7 @@ func metadataHandler(c *gin.Context) {
 	if jBody, err = sjson.Set(jBody, "form", form); err != nil {
 		c.Writer.WriteString(err.Error())
 	}
-	log.Printf("jBody: %s", jBody)
+	clanklog.Infof("jBody: %s", jBody)
 	copyReq := CopyHttpRequest(c.Request)
 	if copyReq.Body != nil {
 		b := binding.Default(c.Request.Method, c.ContentType())
@@ -118,7 +118,7 @@ func (h *httpServer) NotFoundHandler(c *gin.Context) {
 	c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
 }
 func (h *httpServer) commonHandler(c *gin.Context) {
-	//log.Println("method: ", c.Request.Method, " path: ", c.Request.URL.Path)
+	//clanklog.Println("method: ", c.Request.Method, " path: ", c.Request.URL.Path)
 	if _, ok := h.serverMethod[c.FullPath()]; !ok {
 		c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
 		return

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/lpxxn/clank/internal/clanklog"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )
@@ -45,7 +45,7 @@ func TestYaml(t *testing.T) {
 	decoder := yaml.NewDecoder(strings.NewReader(data))
 	err := decoder.Decode(&d2)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		clanklog.Fatalf("error: %v", err)
 	}
 	fmt.Printf("--- d2:\n%v\n\n", d2)
 }
@@ -57,13 +57,13 @@ func TestYaml1(t *testing.T) {
 
 	err := yaml.Unmarshal([]byte(data), &d)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		clanklog.Fatalf("error: %v", err)
 	}
 	fmt.Printf("--- d:\n%v\n\n", d)
 
 	b, err := yaml.Marshal(&d)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		clanklog.Fatalf("error: %v", err)
 	}
 	fmt.Printf("--- d dump:\n%s\n\n", string(b))
 
@@ -71,13 +71,13 @@ func TestYaml1(t *testing.T) {
 
 	err = yaml.Unmarshal([]byte(data), &m)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		clanklog.Fatalf("error: %v", err)
 	}
 	fmt.Printf("--- m:\n%v\n\n", m)
 
 	b, err = yaml.Marshal(&m)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		clanklog.Fatalf("error: %v", err)
 	}
 	fmt.Printf("--- m dump:\n%s\n\n", string(b))
 

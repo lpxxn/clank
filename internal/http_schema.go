@@ -3,9 +3,10 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
+
+	"github.com/lpxxn/clank/internal/clanklog"
 )
 
 type httpServerDescriptor struct {
@@ -86,7 +87,7 @@ func (h *httpServerDescriptor) GetResponse(methodName string, jBody string) (str
 		conditionStr := condition.Condition
 		paramValue, err := ParamValue(condition.Parameters, jBody)
 		if err != nil {
-			log.Println(err)
+			clanklog.Info(err)
 			continue
 		}
 		if len(paramValue) != len(condition.Parameters) {
@@ -95,7 +96,7 @@ func (h *httpServerDescriptor) GetResponse(methodName string, jBody string) (str
 		for k, v := range paramValue {
 			conditionStr = strings.ReplaceAll(conditionStr, "$"+k, fmt.Sprintf("%v", v))
 		}
-		log.Printf("condition: %s", conditionStr)
+		clanklog.Infof("condition: %s", conditionStr)
 		result, err := ValuableBoolExpression(conditionStr)
 		if err != nil {
 			return "", err

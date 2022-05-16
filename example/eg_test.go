@@ -9,7 +9,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+func TestMain(m *testing.M) {
+	internal.Init()
+	os.Exit(m.Run())
+}
+
 func TestYaml1(t *testing.T) {
+
 	f, err := os.Open("grpc_serv.yaml")
 	if err != nil {
 		t.Fatal(err)
