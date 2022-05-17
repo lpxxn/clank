@@ -93,7 +93,7 @@ func TestSchema1(t *testing.T) {
 						"code": 0, "message": "success",
 						"data": {
 							"orderNo": "OrderNo{{RandString 5 10}}",
-							"userID": $param.userID,
+							"userID": $body.userID,
 							"queryUserID": $query.userID,
 							"desc": "body.userID == 1&& query.userID == 2"
 						}

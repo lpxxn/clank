@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/lpxxn/clank/internal"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
 
@@ -13,7 +14,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestYaml1(t *testing.T) {
+func TestGrpcYaml1(t *testing.T) {
 
 	f, err := os.Open("grpc_serv.yaml")
 	if err != nil {
@@ -31,6 +32,15 @@ func TestYaml1(t *testing.T) {
 	t.Log(m)
 
 	servSchema, err := internal.LoadSchemaFromYaml("grpc_serv.yaml")
+	assert.Nil(t, err)
 	t.Log(servSchema)
 	t.Log(servSchema.ValidateAndStartServer())
+}
+
+func TestHttpYaml1(t *testing.T) {
+	servSchema, err := internal.LoadSchemaFromYaml("http_serv.yaml")
+	assert.Nil(t, err)
+	t.Log(servSchema)
+	t.Log(servSchema.ValidateAndStartServer())
+	t.Logf("%+v", servSchema)
 }

@@ -14,6 +14,17 @@ type httpServerDescriptor struct {
 	methodMap        map[string]*httpMethodDescriptor
 }
 
+type httpServerDescriptorList []*httpServerDescriptor
+
+func (c httpServerDescriptorList) Validate() error {
+	for _, s := range c {
+		if err := s.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (h *httpServerDescriptor) Validate() error {
 	if len(h.MethodDescriptor) == 0 {
 		return errors.New("no methods defined")
@@ -35,7 +46,7 @@ func (h *httpServerDescriptor) GetMethod(path string) *httpMethodDescriptor {
 }
 
 type httpMethodDescriptor struct {
-	Name               string                           `yaml:"name,required"`
+	Name               string                           `yaml:"name"`
 	Path               string                           `yaml:"path"`
 	Method             string                           `yaml:"method"`
 	DefaultResponse    string                           `yaml:"defaultResponse"`

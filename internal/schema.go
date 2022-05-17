@@ -110,7 +110,16 @@ func (s *SchemaDescription) UnmarshalYAML(unmarshal func(interface{}) error) err
 			s.Servers = append(s.Servers, server)
 		}
 	} else if kind == HTTP {
-
+		param := struct {
+			Servers httpServerDescriptorList `yaml:"servers" json:"servers"`
+		}{}
+		if err := unmarshal(&param); err != nil {
+			return err
+		}
+		s.Servers = make(ServerList, 0, len(param.Servers))
+		for _, server := range param.Servers {
+			s.Servers = append(s.Servers, server)
+		}
 	}
 	s.SchemaDescriptionBase = b
 	return nil
