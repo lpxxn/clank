@@ -10,7 +10,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	internal.Init()
 	os.Exit(m.Run())
 }
 

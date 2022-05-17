@@ -6,6 +6,5 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	Init()
 	os.Exit(m.Run())
 }

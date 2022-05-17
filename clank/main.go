@@ -14,7 +14,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-	internal.Init()
 	servSchema, err := internal.LoadSchemaFromYaml(yamlPath)
 	if err != nil {
 		panic(err)

@@ -7,8 +7,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	//os.Setenv("CLANK_LOG_LEVEL", "info")
-	//os.Setenv("CLANK_LOG_FORMATTER", "json")
+	//"CLANK_LOG_LEVEL", "info"
+	//"CLANK_LOG_FORMATTER", "json"
 	NewLogger()
 	os.Exit(m.Run())
 }
