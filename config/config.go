@@ -1,10 +1,10 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 
+	"github.com/lpxxn/clank/internal/clanklog"
 	"gopkg.in/yaml.v2"
 )
 
@@ -24,6 +24,6 @@ func ReadFile(filename string) error {
 	}
 	v := map[string]interface{}{}
 	err = yaml.Unmarshal(body, &v)
-	fmt.Println(v, err)
+	clanklog.Info(v, err)
 	return nil
 }

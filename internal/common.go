@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Knetic/govaluate"
+	"github.com/lpxxn/clank/internal/clanklog"
 )
 
 const (
@@ -139,7 +140,7 @@ func ValuableBoolExpression(expressionStr string) (bool, error) {
 		return false, err
 	}
 	result, err := expression.Evaluate(nil)
-	fmt.Println("evaluate result", result, err)
+	clanklog.Info("evaluate result", result, err)
 	if err != nil {
 		return false, err
 	}

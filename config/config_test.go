@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -47,7 +46,7 @@ func TestYaml(t *testing.T) {
 	if err != nil {
 		clanklog.Fatalf("error: %v", err)
 	}
-	fmt.Printf("--- d2:\n%v\n\n", d2)
+	t.Logf("--- d2:\n%v\n\n", d2)
 }
 
 func TestYaml1(t *testing.T) {
@@ -59,13 +58,13 @@ func TestYaml1(t *testing.T) {
 	if err != nil {
 		clanklog.Fatalf("error: %v", err)
 	}
-	fmt.Printf("--- d:\n%v\n\n", d)
+	t.Logf("--- d:\n%v\n\n", d)
 
 	b, err := yaml.Marshal(&d)
 	if err != nil {
 		clanklog.Fatalf("error: %v", err)
 	}
-	fmt.Printf("--- d dump:\n%s\n\n", string(b))
+	t.Logf("--- d dump:\n%s\n\n", string(b))
 
 	m := make(map[interface{}]interface{})
 
@@ -73,13 +72,13 @@ func TestYaml1(t *testing.T) {
 	if err != nil {
 		clanklog.Fatalf("error: %v", err)
 	}
-	fmt.Printf("--- m:\n%v\n\n", m)
+	t.Logf("--- m:\n%v\n\n", m)
 
 	b, err = yaml.Marshal(&m)
 	if err != nil {
 		clanklog.Fatalf("error: %v", err)
 	}
-	fmt.Printf("--- m dump:\n%s\n\n", string(b))
+	t.Logf("--- m dump:\n%s\n\n", string(b))
 
 }
 
@@ -121,7 +120,7 @@ func Parse(source []byte) (err error) {
 
 	var doc T
 	for dec.Decode(&doc) == nil {
-		fmt.Println(doc)
+		clanklog.Info(doc)
 	}
 
 	return

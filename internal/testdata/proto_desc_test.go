@@ -11,6 +11,7 @@ import (
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
+	"github.com/lpxxn/clank/internal/clanklog"
 	"github.com/lpxxn/clank/internal/testdata/protos"
 	"github.com/lpxxn/clank/internal/testdata/protos/api"
 	"github.com/lpxxn/clank/internal/testdata/protos/model"
@@ -201,9 +202,9 @@ var unaryMethodMap map[string]map[string]grpc.MethodDesc = make(map[string]map[s
 func createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 
 	return func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-		fmt.Println(serviceDesc.ServiceName)
-		fmt.Println(methodDesc.GetName())
-		fmt.Println(srv)
+		clanklog.Info(serviceDesc.ServiceName)
+		clanklog.Info(methodDesc.GetName())
+		clanklog.Info(srv)
 		//inputParam := dynamic.NewMessage(methodDesc.GetInputType())
 		msgFactory := dynamic.NewMessageFactoryWithDefaults()
 		inputParam := msgFactory.NewMessage(methodDesc.GetInputType())
@@ -220,13 +221,13 @@ func createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.Met
 			return nil, err
 		}
 		outPutJson, err := dynamicOutput.MarshalJSON()
-		fmt.Println(outPutJson)
+		clanklog.Info(outPutJson)
 
 		outPutJson, err = json.Marshal(outPut)
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(outPutJson)
+		clanklog.Info(outPutJson)
 		dynamicOutput.SetFieldByName("desc", "hahahahah")
 		return dynamicOutput, nil
 		//in := new(QueryStudent)

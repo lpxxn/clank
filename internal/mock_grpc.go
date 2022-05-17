@@ -14,6 +14,7 @@ import (
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
+	"github.com/lpxxn/clank/internal/clanklog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -166,15 +167,15 @@ func (g *gRpcServer) methodDesc(servDescriptor *desc.ServiceDescriptor) *gRpcSer
 
 func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	return func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-		fmt.Println(serviceDesc.ServiceName)
-		fmt.Println(methodDesc.GetName())
-		fmt.Println(srv)
+		clanklog.Info(serviceDesc.ServiceName)
+		clanklog.Info(methodDesc.GetName())
+		clanklog.Info(srv)
 		msgFactory := dynamic.NewMessageFactoryWithDefaults()
 		inputParam := msgFactory.NewMessage(methodDesc.GetInputType())
 		if err := dec(inputParam); err != nil {
 			return nil, err
 		}
-		fmt.Println(inputParam.String())
+		clanklog.Info(inputParam.String())
 
 		outPut := msgFactory.NewMessage(methodDesc.GetOutputType())
 		dynamicOutput, err := dynamic.AsDynamicMessage(outPut)
@@ -183,7 +184,7 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 		}
 
 		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, inputParam)
-		fmt.Println(string(outputJson))
+		clanklog.Info(string(outputJson))
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +207,7 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 			msgFactory := dynamic.NewMessageFactoryWithDefaults()
 			inputParam := msgFactory.NewMessage(unaryMethod.methodDescriptor.GetInputType())
 
-			fmt.Println(json.Marshal(inputParam)) // {}
+			clanklog.Info(json.Marshal(inputParam)) // {}
 			dynamicMsg, err := dynamic.AsDynamicMessage(inputParam)
 			if err != nil {
 				return err
@@ -215,7 +216,7 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(jsonBody))
+			clanklog.Info(string(jsonBody))
 
 			for _, v := range conditionParameters {
 				if !strings.Contains(v, ".") {
@@ -312,13 +313,13 @@ func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
 			notFound := false
 			for k := range condition.Parameters {
 				g := jsonIterator.Get(inputJsonBody, keysInterfaceSlice(k)...)
-				fmt.Println("g:", g, "body:", string(inputJsonBody), "condition:", conditionStr)
+				clanklog.Info("g:", g, "body:", string(inputJsonBody), "condition:", conditionStr)
 				if g.LastError() != nil {
-					fmt.Println(g.LastError())
+					clanklog.Info(g.LastError())
 					notFound = true
 					continue
 				}
-				fmt.Println("json value", g.GetInterface())
+				clanklog.Info("json value", g.GetInterface())
 				paramValue[k] = g.GetInterface()
 			}
 			if notFound || len(paramValue) == 0 {
@@ -327,7 +328,7 @@ func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
 			for k, v := range paramValue {
 				conditionStr = strings.ReplaceAll(conditionStr, grpcRequestToken+"."+k, fmt.Sprintf("%v", v))
 			}
-			fmt.Println("conditionStr", conditionStr)
+			clanklog.Info("conditionStr", conditionStr)
 			result, err := ValuableBoolExpression(conditionStr)
 			if err != nil {
 				return nil, err
@@ -348,6 +349,6 @@ func keysInterfaceSlice(k string) []interface{} {
 	for _, v := range keys {
 		keyList = append(keyList, v)
 	}
-	fmt.Println("keyList", keyList)
+	clanklog.Info("keyList", keyList)
 	return keyList
 }

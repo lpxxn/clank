@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+
+	"github.com/lpxxn/clank/internal/clanklog"
 )
 
 const grpcRequestToken = "$request"
@@ -100,7 +102,7 @@ func (m *GrpcMethodDescription) Validate() error {
 		for _, matchItem := range match {
 			m.Parameters[grpcRequestToken+"."+matchItem[idx]] = matchItem[idx]
 			c.Parameters[matchItem[idx]] = struct{}{}
-			fmt.Println(matchItem[idx])
+			clanklog.Info(matchItem[idx])
 		}
 	}
 	return nil
