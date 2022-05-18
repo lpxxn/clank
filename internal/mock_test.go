@@ -14,14 +14,10 @@ import (
 const testPort int = 54312
 
 func TestServerDesc(t *testing.T) {
-	schema := &SchemaDescription{
-		SchemaDescriptionBase: SchemaDescriptionBase{
-			Kind:       GRPC,
-			Port:       testPort,
-			ImportPath: []string{"./testdata/"},
-			ProtoPath:  []string{"protos/api/student_api.proto"},
-		},
 
+	grpcSchema := &GrpcSchema{
+		ImportPath: []string{"./testdata/"},
+		ProtoPath:  []string{"protos/api/student_api.proto"},
 		Servers: GrpcServerDescriptionList{
 			&GrpcServerDescription{
 				Name: "api.StudentSrv",
@@ -60,18 +56,25 @@ func TestServerDesc(t *testing.T) {
 					},
 				},
 			},
-		}.ToInterface(),
+		},
+	}
+	schema := &SchemaDescription{
+		SchemaDescriptionBase: SchemaDescriptionBase{
+			Kind: GRPC,
+			Port: testPort,
+		},
+		Server: grpcSchema,
 	}
 	t.Log(schema)
 	t.Log(schema.Validate())
-	ser, err := ParseServerMethodsFromProto(schema.ImportPath, schema.ProtoPath)
+	ser, err := ParseServerMethodsFromProto(grpcSchema.ImportPath, grpcSchema.ProtoPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := ValidateGrpcServiceInputAndOutput(schema.Servers, ser); err != nil {
+	if err := ValidateGrpcServiceInputAndOutput(grpcSchema.Servers, ser); err != nil {
 		t.Fatal(err)
 	}
-	if err := SetOutputFunc(schema.Servers, ser); err != nil {
+	if err := SetOutputFunc(grpcSchema.Servers, ser); err != nil {
 		t.Fatal(err)
 	}
 	if err := ser.StartWithPort(schema.Port); err != nil {

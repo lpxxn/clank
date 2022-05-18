@@ -10,6 +10,41 @@ import (
 
 const grpcRequestToken = "$request"
 
+type GrpcSchema struct {
+	// gRpc
+	ImportPath   []string                  `yaml:"importPath" json:"importPath"`
+	ProtoPath    []string                  `yaml:"protoPath" json:"protoPath"`
+	ProtosetPath string                    `yaml:"protosetPath" json:"protosetPath"`
+	Servers      GrpcServerDescriptionList `yaml:"servers" json:"servers"`
+}
+
+func (g *GrpcSchema) Validate() error {
+	if len(g.ProtoPath) == 0 && len(g.ProtosetPath) == 0 {
+		return errors.New("grpc protoPath or protosetPath must be set")
+	}
+	if len(g.Servers) == 0 {
+		return errors.New("grpc servers must be set")
+	}
+	return nil
+}
+
+func (g *GrpcSchema) StartServer(port int) error {
+	serv, err := ParseServerMethodsFromProto(g.ImportPath, g.ProtoPath)
+	if err != nil {
+		return err
+	}
+	if err := ValidateGrpcServiceInputAndOutput(g.Servers, serv); err != nil {
+		return err
+	}
+	if err := SetOutputFunc(g.Servers, serv); err != nil {
+		return err
+	}
+	if err := serv.StartWithPort(port); err != nil {
+		return err
+	}
+	return nil
+}
+
 type GrpcServerDescription struct {
 	Name    string                    `yaml¡:"name" json:"name"`
 	Methods GrpcMethodDescriptionList `yaml:"methods" json:"methods"`
@@ -54,14 +89,6 @@ func (s GrpcServerDescriptionList) GetMethod(servName string, methodName string)
 		}
 	}
 	return nil, fmt.Errorf("server: %s method %s not found", servName, methodName)
-}
-
-func (s GrpcServerDescriptionList) ToInterface() []ServerDescriptionInterface {
-	result := make([]ServerDescriptionInterface, 0, len(s))
-	for _, item := range s {
-		result = append(result, item)
-	}
-	return result
 }
 
 type GrpcMethodDescriptionList []*GrpcMethodDescription
