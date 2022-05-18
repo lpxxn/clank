@@ -10,7 +10,7 @@ import (
 
 const grpcRequestToken = "$request"
 
-type GrpcSchema struct {
+type grpcSchema struct {
 	// gRpc
 	ImportPath   []string                  `yaml:"importPath" json:"importPath"`
 	ProtoPath    []string                  `yaml:"protoPath" json:"protoPath"`
@@ -18,7 +18,7 @@ type GrpcSchema struct {
 	Servers      GrpcServerDescriptionList `yaml:"servers" json:"servers"`
 }
 
-func (g *GrpcSchema) Validate() error {
+func (g *grpcSchema) Validate() error {
 	if len(g.ProtoPath) == 0 && len(g.ProtosetPath) == 0 {
 		return errors.New("grpc protoPath or protosetPath must be set")
 	}
@@ -28,7 +28,7 @@ func (g *GrpcSchema) Validate() error {
 	return nil
 }
 
-func (g *GrpcSchema) StartServer(port int) error {
+func (g *grpcSchema) StartServer(port int) error {
 	serv, err := ParseServerMethodsFromProto(g.ImportPath, g.ProtoPath)
 	if err != nil {
 		return err

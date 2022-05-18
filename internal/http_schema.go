@@ -9,20 +9,28 @@ import (
 	"github.com/lpxxn/clank/internal/clanklog"
 )
 
-type httpServerDescriptor struct {
-	MethodDescriptor []*httpMethodDescriptor `yaml:"methods"`
-	methodMap        map[string]*httpMethodDescriptor
+type httpSchema struct {
+	Server httpServerDescriptor `yaml:"server"`
 }
 
-type httpServerDescriptorList []*httpServerDescriptor
-
-func (c httpServerDescriptorList) Validate() error {
-	for _, s := range c {
-		if err := s.Validate(); err != nil {
-			return err
-		}
+func (h *httpSchema) Validate() error {
+	if err := h.Server.Validate(); err != nil {
+		return err
 	}
 	return nil
+}
+
+func (h *httpSchema) StartServer(port int) error {
+	serv := NewHttpServer(&h.Server)
+	if err := serv.MethodHandler(); err != nil {
+		return err
+	}
+	return serv.StartWithPort(port)
+}
+
+type httpServerDescriptor struct {
+	MethodDescriptor []*httpMethodDescriptor          `yaml:"methods"`
+	methodMap        map[string]*httpMethodDescriptor `yaml:"-"`
 }
 
 func (h *httpServerDescriptor) Validate() error {

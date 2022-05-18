@@ -15,7 +15,7 @@ const testPort int = 54312
 
 func TestServerDesc(t *testing.T) {
 
-	grpcSchema := &GrpcSchema{
+	grpcSchema := &grpcSchema{
 		ImportPath: []string{"./testdata/"},
 		ProtoPath:  []string{"protos/api/student_api.proto"},
 		Servers: GrpcServerDescriptionList{
