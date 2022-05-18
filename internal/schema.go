@@ -17,28 +17,24 @@ const (
 
 type ServerDescriptionInterface interface {
 	Validate() error
+	StartServer(port int) error
 }
 
 type SchemaDescriptionBase struct {
 	Kind ServerKind `yaml:"kind" json:"kind"`
 	Port int        `yaml:"port" json:"port"`
-
-	// gRpc
-	ImportPath   []string `yaml:"importPath" json:"importPath"`
-	ProtoPath    []string `yaml:"protoPath" json:"protoPath"`
-	ProtosetPath string   `yaml:"protosetPath" json:"protosetPath"`
 }
 
 type SchemaDescription struct {
 	SchemaDescriptionBase
-	Servers ServerList `yaml:"servers" json:"servers"`
+	Server ServerDescriptionInterface `yaml:"servers" json:"servers"`
 }
 
 func (s SchemaDescription) Validate() error {
 	if s.Kind != GRPC && s.Kind != HTTP {
 		return errors.New("kind must be GRPC OR HTTP")
 	}
-	err := s.Servers.Validate()
+	err := s.Server.Validate()
 	if err != nil {
 		return err
 	}
@@ -52,21 +48,8 @@ func (s SchemaDescription) ValidateAndStartServer() error {
 	}
 	switch s.Kind {
 	case GRPC:
-		serv, err := ParseServerMethodsFromProto(s.ImportPath, s.ProtoPath)
-		if err != nil {
-			return err
-		}
-		if err := ValidateGrpcServiceInputAndOutput(s.Servers, serv); err != nil {
-			return err
-		}
-		if err := SetOutputFunc(s.Servers, serv); err != nil {
-			return err
-		}
-		if err := serv.StartWithPort(s.Port); err != nil {
-			return err
-		}
+		return s.Server.StartServer(s.Port)
 	case HTTP:
-
 	}
 	return nil
 }
@@ -76,16 +59,14 @@ func (s *SchemaDescription) Unmarshal(d []byte) error {
 	if kind == GRPC {
 		param := struct {
 			SchemaDescriptionBase
-			Servers GrpcServerDescriptionList `yaml:"servers" json:"servers"`
+			GrpcSchema `yaml:"servers" json:"servers"`
 		}{}
 		if err := jsonIter.Unmarshal(d, &param); err != nil {
 			return err
 		}
 		s.SchemaDescriptionBase = param.SchemaDescriptionBase
-		s.Servers = make(ServerList, 0, len(param.Servers))
-		for _, server := range param.Servers {
-			s.Servers = append(s.Servers, server)
-		}
+		s.Server = &param.GrpcSchema
+
 	} else if kind == HTTP {
 
 	}
@@ -99,16 +80,11 @@ func (s *SchemaDescription) UnmarshalYAML(unmarshal func(interface{}) error) err
 	}
 	kind := b.Kind
 	if kind == GRPC {
-		param := struct {
-			Servers GrpcServerDescriptionList `yaml:"servers" json:"servers"`
-		}{}
-		if err := unmarshal(&param); err != nil {
+		param := &GrpcSchema{}
+		if err := unmarshal(param); err != nil {
 			return err
 		}
-		s.Servers = make(ServerList, 0, len(param.Servers))
-		for _, server := range param.Servers {
-			s.Servers = append(s.Servers, server)
-		}
+		s.Server = param
 	} else if kind == HTTP {
 		param := struct {
 			Servers httpServerDescriptorList `yaml:"servers" json:"servers"`
@@ -116,26 +92,26 @@ func (s *SchemaDescription) UnmarshalYAML(unmarshal func(interface{}) error) err
 		if err := unmarshal(&param); err != nil {
 			return err
 		}
-		s.Servers = make(ServerList, 0, len(param.Servers))
-		for _, server := range param.Servers {
-			s.Servers = append(s.Servers, server)
-		}
+		//s.Servers = make(ServerList, 0, len(param.Servers))
+		//for _, server := range param.Servers {
+		//	s.Servers = append(s.Servers, server)
+		//}
 	}
 	s.SchemaDescriptionBase = b
 	return nil
 }
 
-type ServerList []ServerDescriptionInterface
-
-func (s ServerList) Validate() error {
-	for _, item := range s {
-		err := item.Validate()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+//type ServerList []ServerDescriptionInterface
+//
+//func (s ServerList) Validate() error {
+//	for _, item := range s {
+//		err := item.Validate()
+//		if err != nil {
+//			return err
+//		}
+//	}
+//	return nil
+//}
 
 type ResponseConditionDescriptionList []*ResponseConditionDescription
 

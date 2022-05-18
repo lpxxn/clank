@@ -263,16 +263,8 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 	return nil
 }
 
-func ValidateGrpcServiceInputAndOutput(schemaList ServerList, gRpcServ *gRpcServer) error {
-	grpcServersSchema := GrpcServerDescriptionList{}
-	for _, server := range schemaList {
-		if s, ok := server.(*GrpcServerDescription); ok {
-			grpcServersSchema = append(grpcServersSchema, s)
-		} else {
-			return fmt.Errorf("invalid server type %T, need *GrpcServerDescription type", server)
-		}
-	}
-	for _, item := range grpcServersSchema {
+func ValidateGrpcServiceInputAndOutput(schemaList GrpcServerDescriptionList, gRpcServ *gRpcServer) error {
+	for _, item := range schemaList {
 		if err := gRpcServ.ValidateSchemaMethod(item); err != nil {
 			return err
 		}
@@ -280,17 +272,9 @@ func ValidateGrpcServiceInputAndOutput(schemaList ServerList, gRpcServ *gRpcServ
 	return nil
 }
 
-func SetOutputFunc(schemaList ServerList, gRpcServ *gRpcServer) error {
-	grpcServersSchema := GrpcServerDescriptionList{}
-	for _, server := range schemaList {
-		if s, ok := server.(*GrpcServerDescription); ok {
-			grpcServersSchema = append(grpcServersSchema, s)
-		} else {
-			return fmt.Errorf("invalid server type %T, need *GrpcServerDescription type", server)
-		}
-	}
+func SetOutputFunc(schemaList GrpcServerDescriptionList, gRpcServ *gRpcServer) error {
 	gRpcServ.GetOutputJson = func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, inputParam proto.Message) ([]byte, error) {
-		methodSchema, err := grpcServersSchema.GetMethod(serviceDesc.ServiceName, methodDesc.GetName())
+		methodSchema, err := schemaList.GetMethod(serviceDesc.ServiceName, methodDesc.GetName())
 		if err != nil {
 			return nil, fmt.Errorf("server: %s method: %s, err: [%w]", serviceDesc.ServiceName, methodDesc.GetName(), err)
 		}
