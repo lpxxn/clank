@@ -132,7 +132,6 @@ func (h *httpServer) commonHandler(c *gin.Context) {
 }
 
 func (h *httpServer) StartWithPort(port int) error {
-
 	return h.engine.Run(fmt.Sprintf(":%d", port))
 }
 

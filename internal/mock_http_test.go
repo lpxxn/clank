@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lpxxn/clank/internal/clanklog"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 var testEngine *gin.Engine
@@ -234,4 +235,25 @@ func TestHttpRegex(t *testing.T) {
 	for _, matchItem := range match {
 		t.Log(matchItem[idx])
 	}
+}
+
+func TestHttpYAML(t *testing.T) {
+	b, err := yaml.Marshal(httpSchema{Server: httpServerDescriptor{
+		MethodDescriptor: []*httpMethodDescriptor{
+			&httpMethodDescriptor{
+				Name:            "abcafe",
+				Path:            "/index",
+				Method:          "GET",
+				DefaultResponse: "hello",
+			},
+			&httpMethodDescriptor{
+				Name:            "bbb",
+				Path:            "/bbb",
+				Method:          "GET",
+				DefaultResponse: "hello",
+			},
+		},
+	}})
+	assert.Nil(t, err)
+	t.Log(string(b))
 }

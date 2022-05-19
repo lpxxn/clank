@@ -41,5 +41,4 @@ func TestHttpYaml1(t *testing.T) {
 	assert.Nil(t, err)
 	t.Log(servSchema)
 	t.Log(servSchema.ValidateAndStartServer())
-	t.Logf("%+v", servSchema)
 }
