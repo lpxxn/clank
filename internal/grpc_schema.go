@@ -46,7 +46,7 @@ func (g *grpcSchema) StartServer(port int) error {
 }
 
 type GrpcServerDescription struct {
-	Name    string                    `yaml¡:"name" json:"name"`
+	Name    string                    `yaml:"name" json:"name"`
 	Methods GrpcMethodDescriptionList `yaml:"methods" json:"methods"`
 }
 

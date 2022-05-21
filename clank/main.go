@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/lpxxn/clank/internal"
+	"github.com/lpxxn/clank/internal/clanklog"
 )
 
 var yamlPath string
@@ -16,9 +17,9 @@ func main() {
 	flag.Parse()
 	servSchema, err := internal.LoadSchemaFromYaml(yamlPath)
 	if err != nil {
-		panic(err)
+		clanklog.Fatal(err)
 	}
 	if err := servSchema.ValidateAndStartServer(); err != nil {
-		panic(err)
+		clanklog.Fatal(err)
 	}
 }
