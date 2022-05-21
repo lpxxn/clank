@@ -218,4 +218,26 @@ func TestJson(t *testing.T) {
 	t.Log(strings.ReplaceAll("$request.id == 111", "$request.id", fmt.Sprintf("%v", g1.GetInterface())))
 	g1 = jsonIterator.Get(val, "info", "age1")
 	t.Log(g1)
+
+	type mk struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	}
+	m := map[mk][]int{}
+	mk1 := mk{ID: 1, Name: "Reds"}
+	mk2 := mk{ID: 2, Name: "Blue"}
+	if _, ok := m[mk1]; !ok {
+		m[mk1] = []int{1}
+	}
+	if _, ok := m[mk1]; ok {
+		m[mk1] = append(m[mk1], 2)
+	}
+	if _, ok := m[mk2]; !ok {
+		m[mk2] = []int{1}
+	}
+	if _, ok := m[mk2]; ok {
+		m[mk2] = append(m[mk2], 2)
+	}
+
+	t.Log(m)
 }
