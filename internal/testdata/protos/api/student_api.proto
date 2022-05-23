@@ -4,7 +4,7 @@ option go_package = "github.com/lpxxn/clank/internal/testdata/protos/api";
 option java_package = "com.proto.api";
 
 import "github.com/lpxxn/clank/internal/testdata/protos/common.proto";
-import "protos/model/students.proto";
+import "github.com/lpxxn/clank/internal/testdata/protos/model/students.proto";
 import "google/protobuf/empty.proto";
 
 
