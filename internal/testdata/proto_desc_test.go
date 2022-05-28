@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -14,11 +15,11 @@ import (
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
+	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/lpxxn/clank/internal/clanklog"
 	"github.com/lpxxn/clank/internal/testdata/protos"
 	"github.com/lpxxn/clank/internal/testdata/protos/api"
 	"github.com/lpxxn/clank/internal/testdata/protos/model"
-	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/proto"
@@ -36,6 +37,7 @@ var (
 
 func TestMain(m *testing.M) {
 	clanklog.NewLogger()
+	testDynamicProto()
 	os.Exit(m.Run())
 }
 
@@ -66,12 +68,14 @@ func TestProto(t *testing.T) {
 	t.Log(string(b))
 }
 
+var fileDescriptors []*desc.FileDescriptor
+
 // parse proto
-func TestDynamicProto(t *testing.T) {
+func testDynamicProto() {
 	//fileDescriptors := []*desc.FileDescriptor{}
 	goPath, ok := os.LookupEnv("GOPATH")
 	if !ok {
-		t.Error("GOPATH not found")
+		log.Fatal("GOPATH not found")
 		return
 	}
 	goPath += "/src"
@@ -80,22 +84,23 @@ func TestDynamicProto(t *testing.T) {
 		ImportPaths: []string{"./", goPath}, //goPath,
 
 	}
+	var err error
 	//t.Log(desc.ResolveImport("protos/common.proto"))
-	fileDescriptors, err := parser.ParseFiles(
+	fileDescriptors, err = parser.ParseFiles(
 		//"protos/model/students.proto",
 		"protos/api/student_api.proto",
 		//"github.com/lpxxn/clank/internal/testdata/protos/common.proto",
 		//"protos/common.proto",
 	)
 	if err, ok := err.(protoparse.ErrorWithPos); ok {
-		t.Log(err.GetPosition())
-		t.Log(err.Error())
-		t.Fatal(err.Error())
+		log.Println(err.GetPosition())
+		log.Println(err.Error())
+		log.Fatal(err.Error())
 	}
 	//registerFiles, err := protodesc.NewFiles(desc.ToFileDescriptorSet(fileDescriptors...))
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
+	if err != nil {
+		log.Fatal(err)
+	}
 	//registerFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 	//	if ofd, _ := protoregistry.GlobalFiles.FindFileByPath(fd.Path()); ofd != nil {
 	//		return true
@@ -107,30 +112,27 @@ func TestDynamicProto(t *testing.T) {
 	//	}
 	//	return true
 	//})
-	t.Log(err)
-	assert.Nil(t, err)
-	t.Logf("fileDescriptors: %v", fileDescriptors)
 
 	for _, fileDesc := range fileDescriptors {
-		t.Logf("===============\nfileDesc: %v", fileDesc)
-		t.Logf("package: %s, gopackage: %s", fileDesc.GetPackage(), fileDesc.AsFileDescriptorProto().GetOptions().GetGoPackage())
-		t.Logf("Metadata: %s", fileDesc.GetName()) // protos/api/student_api.proto
+		log.Printf("===============\nfileDesc: %v", fileDesc)
+		log.Printf("package: %s, gopackage: %s", fileDesc.GetPackage(), fileDesc.AsFileDescriptorProto().GetOptions().GetGoPackage())
+		log.Printf("Metadata: %s", fileDesc.GetName()) // protos/api/student_api.proto
 		for _, msgDesc := range fileDesc.GetMessageTypes() {
-			t.Logf("msgDesc: %v", msgDesc)
+			log.Printf("msgDesc: %v", msgDesc)
 			msgDesc.AsProto().ProtoMessage()
 			b, err := proto.Marshal(msgDesc.AsDescriptorProto())
-			t.Log(err)
-			t.Log(string(b))
+			log.Println(err)
+			log.Println(string(b))
 		}
 		for _, servDesc := range fileDesc.GetServices() {
-			t.Logf("service info: %v", servDesc)
-			t.Logf("service name: %s", servDesc.GetName())
+			log.Printf("service info: %v", servDesc)
+			log.Printf("service name: %s", servDesc.GetName())
 			for _, methodInfo := range servDesc.GetMethods() {
-				t.Logf("methods %+v", methodInfo)
+				log.Printf("methods %+v", methodInfo)
 				input := methodInfo.GetInputType()
-				t.Log(input)
+				log.Println(input)
 				output := methodInfo.GetOutputType()
-				t.Log(output)
+				log.Println(output)
 			}
 		}
 		CreateServiceDesc(fileDesc)
@@ -144,9 +146,10 @@ func CreateServiceDesc(fileDesc *desc.FileDescriptor) {
 			ServiceName: servDescriptor.GetFullyQualifiedName(), // api.StudentSrv
 			Metadata:    fileDesc.GetName(),
 		}
-		unaryMethodMap[serviceDesc.ServiceName] = make(map[string]grpc.MethodDesc)
 
 		for _, methodDescriptor := range servDescriptor.GetMethods() {
+			unaryMethodMap[methodDescriptor.GetFullyQualifiedName()] = methodDescriptor
+			log.Println(methodDescriptor.GetFullyQualifiedName())
 			isServerStream := methodDescriptor.IsServerStreaming()
 			isClientStream := methodDescriptor.IsClientStreaming()
 			if isServerStream || isClientStream {
@@ -158,10 +161,6 @@ func CreateServiceDesc(fileDesc *desc.FileDescriptor) {
 				}
 				serviceDesc.Streams = append(serviceDesc.Streams, streamDesc)
 			} else {
-				unaryMethodMap[serviceDesc.ServiceName][methodDescriptor.GetName()] = grpc.MethodDesc{
-					MethodName: methodDescriptor.GetName(),
-					Handler:    nil,
-				}
 				clanklog.Infof("method: %s run handler", methodDescriptor.GetName())
 				methodDesc := grpc.MethodDesc{
 					MethodName: methodDescriptor.GetName(),
@@ -178,8 +177,54 @@ func CreateServiceDesc(fileDesc *desc.FileDescriptor) {
 			panic(err)
 		}
 		reflection.Register(grpcServ)
-		grpcServ.Serve(listener)
+		go grpcServ.Serve(listener)
 	}
+}
+
+/*
+api.StudentSrv.NewStudent
+api.StudentSrv.StudentByID
+api.StudentSrv.AllStudent
+api.StudentSrv.StudentInfo
+api.StudentSrv.QueryStudents
+*/
+func getMethodDesc(methodName string) *desc.MethodDescriptor {
+	if methodDesc, ok := unaryMethodMap[methodName]; ok {
+		return methodDesc
+	}
+	return nil
+}
+
+func TestDynamicClient(t *testing.T) {
+	cc, err := grpc.Dial(fmt.Sprintf(":%d", testPort), grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create client to %d: %s", testPort, err.Error()))
+	}
+	defer cc.Close()
+
+	stub := grpcdynamic.NewStub(cc)
+	t.Log(stub)
+	newStudentDesc := getMethodDesc("api.StudentSrv.NewStudent")
+	t.Log(newStudentDesc)
+	msgFactory := dynamic.NewMessageFactoryWithDefaults()
+	inputParam := msgFactory.NewMessage(newStudentDesc.GetInputType())
+
+	dynamicInputParam, _ := dynamic.AsDynamicMessage(inputParam)
+	dynamicInputParam.UnmarshalJSON([]byte(`{"id":222,"name":"abc"}`))
+	resp, err := stub.InvokeRpc(context.Background(), newStudentDesc, dynamicInputParam)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(resp.String())
+
+	//resp, err = stub.InvokeRpc(context.Background(), newStudentDesc, &model.Student{
+	//	Id:   111,
+	//	Name: "abc",
+	//})
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//t.Log(resp.String())
 }
 
 func TestRpcClient(t *testing.T) {
@@ -237,7 +282,7 @@ func TestRpcClient(t *testing.T) {
 	t.Logf("%+v", allStu)
 }
 
-var unaryMethodMap map[string]map[string]grpc.MethodDesc = make(map[string]map[string]grpc.MethodDesc)
+var unaryMethodMap map[string]*desc.MethodDescriptor = make(map[string]*desc.MethodDescriptor)
 
 func createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 
@@ -252,7 +297,9 @@ func createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.Met
 			return nil, err
 		}
 		clanklog.Info("input ", methodDesc.GetInputType())
-
+		inPut, _ := dynamic.AsDynamicMessage(inputParam)
+		inPutBody, _ := inPut.MarshalJSON()
+		log.Printf("input body: %s", inPutBody)
 		outPut := msgFactory.NewMessage(methodDesc.GetOutputType())
 		dynamicOutput, err := dynamic.AsDynamicMessage(outPut)
 		if err != nil {

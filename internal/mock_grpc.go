@@ -14,6 +14,7 @@ import (
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
+	_ "github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/lpxxn/clank/internal/clanklog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
