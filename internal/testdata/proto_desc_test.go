@@ -32,14 +32,14 @@ var (
 
 func TestMain(m *testing.M) {
 	clanklog.NewLogger()
-	testDynamicProto()
+	testDynamicProto(false)
 	os.Exit(m.Run())
 }
 
 var fileDescriptors []*desc.FileDescriptor
 
 // parse proto
-func testDynamicProto() {
+func testDynamicProto(startServ bool) {
 	//fileDescriptors := []*desc.FileDescriptor{}
 	goPath, ok := os.LookupEnv("GOPATH")
 	if !ok {
@@ -103,12 +103,12 @@ func testDynamicProto() {
 				log.Println(output)
 			}
 		}
-		CreateServiceDesc(fileDesc)
+		CreateServiceDesc(fileDesc, startServ)
 	}
 
 }
 
-func CreateServiceDesc(fileDesc *desc.FileDescriptor) {
+func CreateServiceDesc(fileDesc *desc.FileDescriptor, startServ bool) {
 	for _, servDescriptor := range fileDesc.GetServices() {
 		serviceDesc := grpc.ServiceDesc{
 			ServiceName: servDescriptor.GetFullyQualifiedName(), // api.StudentSrv
@@ -137,15 +137,17 @@ func CreateServiceDesc(fileDesc *desc.FileDescriptor) {
 				serviceDesc.Methods = append(serviceDesc.Methods, methodDesc)
 			}
 		}
-		grpcServ := grpc.NewServer()
-		grpcServ.RegisterService(&serviceDesc, nil)
+		if startServ {
+			grpcServ := grpc.NewServer()
+			grpcServ.RegisterService(&serviceDesc, nil)
 
-		listener, err := net.Listen("tcp", testAddress)
-		if err != nil {
-			panic(err)
+			listener, err := net.Listen("tcp", testAddress)
+			if err != nil {
+				panic(err)
+			}
+			reflection.Register(grpcServ)
+			go grpcServ.Serve(listener)
 		}
-		reflection.Register(grpcServ)
-		go grpcServ.Serve(listener)
 	}
 }
 

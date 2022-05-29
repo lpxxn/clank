@@ -144,9 +144,8 @@ func (g *gRpcServer) methodDesc(servDescriptor *desc.ServiceDescriptor) *gRpcSer
 		isClientStream := methodDescriptor.IsClientStreaming()
 		if isServerStream || isClientStream {
 			streamDesc := gRpcStreamDesc{StreamDesc: &grpc.StreamDesc{
-				StreamName: methodDescriptor.GetName(),
-				// TODO: // wait a moment
-				Handler:       nil,
+				StreamName:    methodDescriptor.GetName(),
+				Handler:       g.createStreamHandler(*rev.ServiceDesc, methodDescriptor),
 				ServerStreams: isServerStream,
 				ClientStreams: isClientStream,
 			}, methodDescriptor: methodDescriptor}
@@ -193,6 +192,35 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 			return nil, err
 		}
 		return dynamicOutput, nil
+	}
+}
+
+func (g *gRpcServer) createStreamHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, stream grpc.ServerStream) error {
+	return func(srv interface{}, stream grpc.ServerStream) error {
+		isServerStream := methodDesc.IsServerStreaming()
+		isClientStream := methodDesc.IsClientStreaming()
+		clanklog.Info(isServerStream)
+		clanklog.Info(isClientStream)
+		msgFactory := dynamic.NewMessageFactoryWithDefaults()
+		inputType := methodDesc.GetInputType()
+		inputParam := msgFactory.NewMessage(inputType)
+		if err := stream.RecvMsg(inputParam); err != nil {
+			return err
+		}
+		clanklog.Info(inputParam.String())
+
+		outPut := msgFactory.NewMessage(methodDesc.GetOutputType())
+		dynamicOutput, err := dynamic.AsDynamicMessage(outPut)
+		if err != nil {
+			return err
+		}
+		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, inputParam)
+		clanklog.Info(string(outputJson))
+		if err := dynamicOutput.UnmarshalJSON([]byte(outputJson)); err != nil {
+			return err
+		}
+
+		return stream.SendMsg(dynamicOutput)
 	}
 }
 
