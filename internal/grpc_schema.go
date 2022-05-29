@@ -25,7 +25,8 @@ func (g *grpcSchema) Validate() error {
 	if len(g.Servers) == 0 {
 		return errors.New("grpc servers must be set")
 	}
-	return nil
+
+	return g.Servers.Validate()
 }
 
 func (g *grpcSchema) StartServer(port int) error {
@@ -105,6 +106,7 @@ func (m GrpcMethodDescriptionList) Validate() error {
 type GrpcMethodDescription struct {
 	Name            string                           `yaml:"name" json:"name"`
 	DefaultResponse string                           `yaml:"defaultResponse" json:"defaultResponse"`
+	DefaultMetaData map[string]string                `yaml:"defaultMetaData"`
 	Conditions      ResponseConditionDescriptionList `yaml:"conditions" json:"conditions"`
 	Parameters      map[string]string                `yaml:"-" json:"-"`
 }

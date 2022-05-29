@@ -25,6 +25,10 @@ func TestServerDesc(t *testing.T) {
 					&GrpcMethodDescription{
 						Name:            "NewStudent",
 						DefaultResponse: `{"code":"OK","desc":"OK","data":"eyJzdHVkZW50TGlzdCI6W3sibmFtZSI6InRlc3QiLCJhZ2UiOjF9LHsibmFtZSI6InRlc3QyIiwiYWdlIjoyfV19"}`,
+						DefaultMetaData: map[string]string{
+							"userID":   "123",
+							"userName": "test",
+						},
 						Conditions: []*ResponseConditionDescription{
 							&ResponseConditionDescription{
 								Condition: `"$request.name" == "test"`,

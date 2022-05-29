@@ -180,7 +180,7 @@ func TestDynamicClient(t *testing.T) {
 	inputParam := msgFactory.NewMessage(newStudentDesc.GetInputType())
 
 	dynamicInputParam, _ := dynamic.AsDynamicMessage(inputParam)
-	dynamicInputParam.UnmarshalJSON([]byte(`{"id":222,"name":"abc"}`))
+	dynamicInputParam.UnmarshalJSON([]byte(`{"id":222,"name":"test"}`))
 	resp, err := stub.InvokeRpc(context.Background(), newStudentDesc, dynamicInputParam)
 	if err != nil {
 		t.Fatal(err)
@@ -202,7 +202,7 @@ func TestDynamicClient(t *testing.T) {
 	inputParam = msgFactory.NewMessage(studentByIDDesc.GetInputType())
 
 	dynamicInputParam, _ = dynamic.AsDynamicMessage(inputParam)
-	dynamicInputParam.UnmarshalJSON([]byte(`{"id":11}`))
+	dynamicInputParam.UnmarshalJSON([]byte(`{"id":111}`))
 	resp, err = stub.InvokeRpc(context.Background(), studentByIDDesc, dynamicInputParam)
 	if err != nil {
 		t.Fatal(err)

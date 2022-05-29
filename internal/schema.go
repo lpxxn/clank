@@ -91,18 +91,6 @@ func (s *SchemaDescription) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return nil
 }
 
-//type ServerList []ServerDescriptionInterface
-//
-//func (s ServerList) Validate() error {
-//	for _, item := range s {
-//		err := item.Validate()
-//		if err != nil {
-//			return err
-//		}
-//	}
-//	return nil
-//}
-
 type ResponseConditionDescriptionList []*ResponseConditionDescription
 
 type ResponseConditionDescription struct {
