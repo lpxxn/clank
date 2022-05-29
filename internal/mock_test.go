@@ -166,6 +166,8 @@ func TestValuate1(t *testing.T) {
 	t.Log(result)
 }
 
+var grpcParamRegex = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
+
 func TestRe(t *testing.T) {
 	grpcParamRegex = regexp.MustCompile(`.*{{.*}}.*`)
 	s := grpcParamRegex.FindAllString("asdfP{{asdf", -1)
