@@ -6,20 +6,15 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"net"
 	"os"
 	"testing"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/lpxxn/clank/internal/clanklog"
-	"github.com/lpxxn/clank/internal/testdata/protos"
-	"github.com/lpxxn/clank/internal/testdata/protos/api"
-	"github.com/lpxxn/clank/internal/testdata/protos/model"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/proto"
@@ -39,33 +34,6 @@ func TestMain(m *testing.M) {
 	clanklog.NewLogger()
 	testDynamicProto()
 	os.Exit(m.Run())
-}
-
-func TestProto(t *testing.T) {
-	req := api.QueryStudent{Id: 1}
-	b, _ := json.Marshal(req)
-	t.Log(string(b))
-	resp := api.QueryStudentResponse{StudentList: []*model.Student{
-		{
-			Name: "heihei",
-			Age:  1,
-		},
-		{
-			Name: "hahaha",
-			Age:  9,
-		},
-	}}
-	b, _ = json.Marshal(resp)
-	t.Log(string(b))
-
-	result := protos.Result{
-		Code: "OK",
-		Desc: "OK",
-		Data: b,
-	}
-
-	b, _ = json.Marshal(result)
-	t.Log(string(b))
 }
 
 var fileDescriptors []*desc.FileDescriptor
@@ -225,40 +193,77 @@ func TestDynamicClient(t *testing.T) {
 	//	t.Fatal(err)
 	//}
 	//t.Log(resp.String())
+
+	// api.StudentSrv.StudentByID
+	studentByIDDesc := getMethodDesc("api.StudentSrv.StudentByID")
+	t.Log(studentByIDDesc)
+	inputParam = msgFactory.NewMessage(studentByIDDesc.GetInputType())
+
+	dynamicInputParam, _ = dynamic.AsDynamicMessage(inputParam)
+	dynamicInputParam.UnmarshalJSON([]byte(`{"id":11}`))
+	resp, err = stub.InvokeRpc(context.Background(), studentByIDDesc, dynamicInputParam)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(resp.String())
+
+	dynamicInputParam.UnmarshalJSON([]byte(`{"id":456}`))
+	resp, err = stub.InvokeRpc(context.Background(), studentByIDDesc, dynamicInputParam)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(resp.String())
+
+	// api.StudentSrv.AllStudent
+	allStudentDesc := getMethodDesc("api.StudentSrv.AllStudent")
+	t.Log(studentByIDDesc)
+	inputParam = msgFactory.NewMessage(allStudentDesc.GetInputType())
+	serverStream, err := stub.InvokeRpcServerStream(context.Background(), allStudentDesc, inputParam)
+	if err != nil {
+		t.Fatal(err)
+	}
+	allStuRev, err := serverStream.RecvMsg()
+	if err == io.EOF {
+		t.Log("EOF")
+	}
+	if err != nil && err != io.EOF {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", allStuRev.String())
 }
 
 func TestRpcClient(t *testing.T) {
-	conn, err := grpc.Dial(testAddress, grpc.WithInsecure())
-	if err != nil {
-		t.Fatal(err)
-	}
-	client := api.NewStudentSrvClient(conn)
-	result, err := client.NewStudent(context.Background(), &model.Student{
-		Id:   111,
-		Name: "abc",
-	})
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(result)
+	//conn, err := grpc.Dial(testAddress, grpc.WithInsecure())
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//client := api.NewStudentSrvClient(conn)
+	//result, err := client.NewStudent(context.Background(), &model.Student{
+	//	Id:   111,
+	//	Name: "abc",
+	//})
+	//
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//t.Log(result)
 	// 有pb.go和没有还不一样。
-	rev2, err := client.StudentByID(context.Background(), &api.QueryStudent{
-		Id: 11,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(rev2)
-
-	rev2, err = client.StudentByID(context.Background(), &api.QueryStudent{
-		Id: 456,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(rev2)
+	//rev2, err := client.StudentByID(context.Background(), &api.QueryStudent{
+	//	Id: 11,
+	//})
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//t.Log(rev2)
+	//
+	//rev2, err = client.StudentByID(context.Background(), &api.QueryStudent{
+	//	Id: 456,
+	//})
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//t.Log(rev2)
 	//out := map[string]interface{}{}
 	//err = conn.Invoke(context.Background(), "/api.StudentSrv/NewStudent", map[string]string{"name": "test"}, out)
 	//if err != nil {
@@ -267,19 +272,19 @@ func TestRpcClient(t *testing.T) {
 	//
 	//t.Log(out)
 
-	revStream1, err := client.AllStudent(context.Background(), &empty.Empty{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	allStu, err := revStream1.Recv()
-	if err == io.EOF {
-		t.Log("EOF")
-	}
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("%+v", allStu)
+	//revStream1, err := client.AllStudent(context.Background(), &empty.Empty{})
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//allStu, err := revStream1.Recv()
+	//if err == io.EOF {
+	//	t.Log("EOF")
+	//}
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//t.Logf("%+v", allStu)
 }
 
 var unaryMethodMap map[string]*desc.MethodDescriptor = make(map[string]*desc.MethodDescriptor)
@@ -368,23 +373,7 @@ func createStreamHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDe
 		if err := dynamicOutput.UnmarshalJSON([]byte(`{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}`)); err != nil {
 			return err
 		}
+		stream.SendMsg(dynamicOutput)
 		return nil
 	}
-}
-
-func TestProtoEntity(t *testing.T) {
-	StudentList := []*model.Student{
-		{
-			Id:   111,
-			Name: "abc",
-			Age:  rand.Int31(),
-		},
-		{
-			Id:   222,
-			Name: "def",
-			Age:  rand.Int31(),
-		},
-	}
-	b, _ := json.Marshal(StudentList)
-	t.Log(string(b))
 }
