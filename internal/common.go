@@ -113,10 +113,10 @@ func GenerateTemplate(templateText string, templateData interface{}, params map[
 	return buf.Bytes(), nil
 }
 
-func ParametersFromStr(str string) map[string]struct{} {
+func ParametersFromStr(str string, regExpr *regexp.Regexp) map[string]struct{} {
 	parameters := make(map[string]struct{})
-	match := httpRegex.FindAllStringSubmatch(str, -1)
-	idx := httpRegex.SubexpIndex("parameter")
+	match := regExpr.FindAllStringSubmatch(str, -1)
+	idx := regExpr.SubexpIndex("parameter")
 	for _, matchItem := range match {
 		parameters[matchItem[idx]] = struct{}{}
 	}

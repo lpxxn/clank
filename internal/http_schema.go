@@ -80,7 +80,7 @@ func (d *httpMethodDescriptor) Validate() error {
 	if d.DefaultResponse == "" {
 		return errors.New("defaultResponse is required")
 	}
-	d.responseParameters = ParametersFromStr(d.DefaultResponse)
+	d.responseParameters = ParametersFromStr(d.DefaultResponse, httpRegex)
 	for _, condition := range d.Conditions {
 		if len(condition.Condition) == 0 {
 			return fmt.Errorf("http method %s condition is empty", d.Name)
@@ -88,8 +88,8 @@ func (d *httpMethodDescriptor) Validate() error {
 		if len(condition.Response) == 0 {
 			return fmt.Errorf("http method %s condition response is empty", d.Name)
 		}
-		condition.Parameters = ParametersFromStr(condition.Condition)
-		condition.ResponseParameters = ParametersFromStr(condition.Response)
+		condition.Parameters = ParametersFromStr(condition.Condition, httpRegex)
+		condition.ResponseParameters = ParametersFromStr(condition.Response, httpRegex)
 	}
 	return nil
 }
@@ -106,7 +106,7 @@ func (h *httpServerDescriptor) GetResponse(methodName string, jBody string) (str
 		conditionStr := condition.Condition
 		paramValue, err := ParamValue(condition.Parameters, jBody)
 		if err != nil {
-			clanklog.Info(err)
+			clanklog.Errorf("get condition param value error: %s", err)
 			continue
 		}
 		if len(paramValue) != len(condition.Parameters) {

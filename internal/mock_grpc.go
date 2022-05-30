@@ -16,7 +16,9 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 	_ "github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/lpxxn/clank/internal/clanklog"
+	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -27,7 +29,7 @@ type gRpcServer struct {
 	rpcServiceDescGroup []*gRpcServiceDesc
 	serverNames         map[string]struct{}
 
-	GetOutputJson func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, inputParam proto.Message) ([]byte, error)
+	GetOutputJson func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, jBody string) ([]byte, error)
 }
 
 type MockGrpcResponse struct {
@@ -183,7 +185,14 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 			return nil, err
 		}
 
-		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, inputParam)
+		//dynamicMsg, err := dynamic.AsDynamicMessage(inputParam)
+		//if err != nil {
+		//	return nil, err
+		//}
+		//inputJsonBody, err := dynamicMsg.MarshalJSON()
+		ctx = g.setRequestJBody(ctx, inputParam)
+
+		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, g.getJBody(ctx))
 		clanklog.Info(string(outputJson))
 		if err != nil {
 			return nil, err
@@ -195,12 +204,53 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 	}
 }
 
+func (g *gRpcServer) getRequestHeaders(md metadata.MD) map[string]string {
+	headers := make(map[string]string)
+	for k, v := range md {
+		headers[k] = v[0]
+	}
+	return headers
+}
+
+func (g *gRpcServer) setRequestJBody(ctx context.Context, body proto.Message) (rev context.Context) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		md = metadata.New(nil)
+	}
+	jBody := ``
+	var err error
+	headers := g.getRequestHeaders(md)
+	if len(headers) > 0 {
+		jBody, err = sjson.Set(jBody, `header`, headers)
+		if err != nil {
+			clanklog.Errorf("set request header jBody error: %v", err)
+		}
+	}
+
+	jBody, err = sjson.Set(jBody, grpcRequestParam, body)
+	if err != nil {
+		clanklog.Errorf("setRequestParamJBody error: %v", err)
+	}
+	// set metadata
+	md["customer-body"] = []string{jBody}
+	return metadata.NewIncomingContext(ctx, md)
+}
+
+func (g *gRpcServer) getJBody(ctx context.Context) string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ``
+	}
+	return md["customer-body"][0]
+}
+
 func (g *gRpcServer) createStreamHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, stream grpc.ServerStream) error {
 	return func(srv interface{}, stream grpc.ServerStream) error {
 		isServerStream := methodDesc.IsServerStreaming()
 		isClientStream := methodDesc.IsClientStreaming()
 		clanklog.Info(isServerStream)
 		clanklog.Info(isClientStream)
+		ctx := stream.Context()
 		msgFactory := dynamic.NewMessageFactoryWithDefaults()
 		inputType := methodDesc.GetInputType()
 		inputParam := msgFactory.NewMessage(inputType)
@@ -209,12 +259,14 @@ func (g *gRpcServer) createStreamHandler(serviceDesc grpc.ServiceDesc, methodDes
 		}
 		clanklog.Info(inputParam.String())
 
+		ctx = g.setRequestJBody(ctx, inputParam)
+
 		outPut := msgFactory.NewMessage(methodDesc.GetOutputType())
 		dynamicOutput, err := dynamic.AsDynamicMessage(outPut)
 		if err != nil {
 			return err
 		}
-		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, inputParam)
+		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, g.getJBody(ctx))
 		clanklog.Info(string(outputJson))
 		if err := dynamicOutput.UnmarshalJSON([]byte(outputJson)); err != nil {
 			return err
@@ -254,32 +306,6 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 					}
 				}
 			}
-			outPut := msgFactory.NewMessage(unaryMethod.methodDescriptor.GetOutputType())
-			dynamicOutput, err := dynamic.AsDynamicMessage(outPut)
-			if err != nil {
-				return err
-			}
-
-			if item.DefaultResponse != "" {
-				v, err := GenerateDefaultTemplate(item.DefaultResponse)
-				if err != nil {
-					return fmt.Errorf("failed to generate default template response %s", err)
-				}
-				if err := dynamicOutput.UnmarshalJSON(v); err != nil {
-					return fmt.Errorf("server: %s method: %s, invalid default response %s, err: [%w]", serverSchema.Name, item.Name, item.DefaultResponse, err)
-				}
-			}
-
-			for _, v := range item.Conditions {
-				str, err := GenerateDefaultTemplate(v.Response)
-				if err != nil {
-					return fmt.Errorf("failed to generate default template response %s", err)
-				}
-				if err := dynamicOutput.UnmarshalJSON(str); err != nil {
-					return fmt.Errorf("server: %s method: %s, invalid condition response %s, err: [%w]", serverSchema.Name, item.Name, v.Response, err)
-				}
-			}
-			continue
 		}
 
 		streamMethod, ok := g.streamMethodMap[serverSchema.Name][item.Name]
@@ -287,7 +313,7 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 			_ = streamMethod
 			continue
 		}
-		return fmt.Errorf("invalid method name %s", item.Name)
+		//return fmt.Errorf("invalid method name %s", item.Name)
 	}
 	return nil
 }
@@ -302,7 +328,7 @@ func ValidateGrpcServiceInputAndOutput(schemaList GrpcServerDescriptionList, gRp
 }
 
 func SetOutputFunc(schemaList GrpcServerDescriptionList, gRpcServ *gRpcServer) error {
-	gRpcServ.GetOutputJson = func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, inputParam proto.Message) ([]byte, error) {
+	gRpcServ.GetOutputJson = func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, jBody string) ([]byte, error) {
 		methodSchema, err := schemaList.GetMethod(serviceDesc.ServiceName, methodDesc.GetName())
 		if err != nil {
 			return nil, fmt.Errorf("server: %s method: %s, err: [%w]", serviceDesc.ServiceName, methodDesc.GetName(), err)
@@ -311,36 +337,20 @@ func SetOutputFunc(schemaList GrpcServerDescriptionList, gRpcServ *gRpcServer) e
 		if len(methodSchema.Conditions) == 0 {
 			return GenerateDefaultTemplate(methodSchema.DefaultResponse)
 		}
-
-		dynamicMsg, err := dynamic.AsDynamicMessage(inputParam)
-		if err != nil {
-			return nil, err
-		}
-		inputJsonBody, err := dynamicMsg.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
 		for _, condition := range methodSchema.Conditions {
 			conditionStr := condition.Condition
-			paramValue := map[string]interface{}{}
-			notFound := false
-			for k := range condition.Parameters {
-				g := jsonIterator.Get(inputJsonBody, keysInterfaceSlice(k)...)
-				clanklog.Info("g:", g, "body:", string(inputJsonBody), "condition:", conditionStr)
-				if g.LastError() != nil {
-					clanklog.Info(g.LastError())
-					notFound = true
-					continue
-				}
-				clanklog.Info("json value", g.GetInterface())
-				paramValue[k] = g.GetInterface()
+			paramValue, err := ParamValue(condition.Parameters, jBody)
+			if err != nil {
+				clanklog.Errorf("get condition param value error: %s", err)
+				continue
 			}
-			if notFound || len(paramValue) == 0 {
+			if len(paramValue) != len(condition.Parameters) {
 				continue
 			}
 			for k, v := range paramValue {
-				conditionStr = strings.ReplaceAll(conditionStr, grpcRequestToken+"."+k, fmt.Sprintf("%v", v))
+				conditionStr = strings.ReplaceAll(conditionStr, "$"+k, fmt.Sprintf("%v", v))
 			}
+
 			clanklog.Info("conditionStr", conditionStr)
 			result, err := ValuableBoolExpression(conditionStr)
 			if err != nil {

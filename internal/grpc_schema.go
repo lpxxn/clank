@@ -4,8 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-
-	"github.com/lpxxn/clank/internal/clanklog"
+	"strings"
 )
 
 const grpcRequestToken = "$request"
@@ -111,7 +110,9 @@ type GrpcMethodDescription struct {
 	Parameters      map[string]string                `yaml:"-" json:"-"`
 }
 
-var grpcParamRegex = regexp.MustCompile(`\$request.(?P<parameter>[.\w]+)`)
+const grpcRequestParam = "request"
+
+var grpcRegex = regexp.MustCompile(`\$(?P<parameter>(request|header)\.\w+[.\w-_]*)`)
 
 func (m *GrpcMethodDescription) Validate() error {
 	if m.Name == "" {
@@ -125,14 +126,14 @@ func (m *GrpcMethodDescription) Validate() error {
 		if c.Condition == "" || c.Response == "" {
 			return errors.New("condition or response is empty")
 		}
-		match := grpcParamRegex.FindAllStringSubmatch(c.Condition, -1)
-		idx := grpcParamRegex.SubexpIndex("parameter")
-		c.Parameters = map[string]struct{}{}
-		for _, matchItem := range match {
-			m.Parameters[grpcRequestToken+"."+matchItem[idx]] = matchItem[idx]
-			c.Parameters[matchItem[idx]] = struct{}{}
-			clanklog.Info(matchItem[idx])
+		c.Parameters = ParametersFromStr(c.Condition, grpcRegex)
+		for key, _ := range c.Parameters {
+			if strings.HasPrefix(key, grpcRequestParam) {
+				m.Parameters[key] = strings.Split(key, ".")[1]
+			}
+			m.Parameters[key] = key
 		}
+		c.ResponseParameters = ParametersFromStr(c.Response, grpcRegex)
 	}
 	return nil
 }

@@ -227,9 +227,9 @@ func TestNoRouter(t *testing.T) {
 func TestHttpRegex(t *testing.T) {
 	initGin()
 
-	regex := regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
+	regex := regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w-_]*)`)
 
-	str := `$body.name=$param.id || "$abcdef.eeeee" = 1334`
+	str := `$body.name=$param.id || "$abcdef.eeeee" = 1334 || $query.x-header`
 	match := regex.FindAllStringSubmatch(str, -1)
 	idx := regex.SubexpIndex("parameter")
 	for _, matchItem := range match {
