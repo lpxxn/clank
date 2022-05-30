@@ -16,6 +16,7 @@ import (
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/lpxxn/clank/internal/clanklog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/proto"
 )
@@ -182,6 +183,22 @@ func TestDynamicClient(t *testing.T) {
 	dynamicInputParam, _ := dynamic.AsDynamicMessage(inputParam)
 	dynamicInputParam.UnmarshalJSON([]byte(`{"id":222,"name":"test"}`))
 	resp, err := stub.InvokeRpc(context.Background(), newStudentDesc, dynamicInputParam)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(resp.String())
+
+	dynamicInputParam.UnmarshalJSON([]byte(`{"id":111,"name":"abc"}`))
+	resp, err = stub.InvokeRpc(context.Background(), newStudentDesc, dynamicInputParam)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(resp.String())
+
+	header := metadata.Pairs("x-header", "test")
+	ctx := metadata.NewOutgoingContext(context.Background(), header)
+	dynamicInputParam.UnmarshalJSON([]byte(`{"id":12,"name":"abc"}`))
+	resp, err = stub.InvokeRpc(ctx, newStudentDesc, dynamicInputParam, grpc.Header(&header))
 	if err != nil {
 		t.Fatal(err)
 	}

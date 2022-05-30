@@ -112,7 +112,7 @@ type GrpcMethodDescription struct {
 
 const grpcRequestParam = "request"
 
-var grpcRegex = regexp.MustCompile(`\$(?P<parameter>(request|header)\.\w+[.\w]*)`)
+var grpcRegex = regexp.MustCompile(`\$(?P<parameter>(request|header)\.\w+[.\w-_]*)`)
 
 func (m *GrpcMethodDescription) Validate() error {
 	if m.Name == "" {
