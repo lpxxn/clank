@@ -9,7 +9,14 @@
 
 - [x] Mock Http server 
 - [x] Mock Grpc server
+- [x] Template function
 - [x] Get value from Http&Grpc request
 - [x] Response data based on custom conditions
 - [ ] Custom variable parameters
 - [ ] Send Http or Grpc request after mock server response  
+
+
+## build & install
+
+
+## mock rpc
