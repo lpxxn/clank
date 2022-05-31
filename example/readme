@@ -4,11 +4,23 @@ clank --yaml grpc_serv.yaml
 
 
 ### grpcurl test
-
+#### normal
 ```
 grpcurl -plaintext \
 -import-path $GOPATH/src \
 -import-path ../internal/testdata/ \
+-d '{
+  "id": 1
+}' \
+-proto protos/api/student_api.proto \
+127.0.0.1:54312 api.StudentSrv/StudentByID
+```
+#### header
+```
+grpcurl -plaintext \
+-import-path $GOPATH/src \
+-import-path ../internal/testdata/ \
+-H 'x-header: test' \
 -d '{
   "id": 1
 }' \
