@@ -38,7 +38,7 @@ servers:
   - name: api.StudentSrv
     methods:
       - name: StudentByID
-        defaultResponse: '{"studentList":[{"name":"test","age":1},{"name":"test2","age":2}]}'
+        defaultResponse: '{"studentList":[{"name":"test","age":1},{"name":"{{RandString 3 10}}","age":{{ RandInt32 }}}]}'
         conditions:
           - condition: '$request.id == 111'
             response: '{"studentList":[{"name":"test1111","age":111}]}'
