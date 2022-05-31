@@ -19,7 +19,7 @@
 ## build & install
 
 
-## mock rpc
+## mock rpc server
 in the example directory, you can run the following command to mock rpc server
 
 ```
@@ -61,4 +61,94 @@ servers:
       - name: AllStudent
         defaultResponse: '{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}'
 
+```
+
+
+## mock http server
+
+in the example directory, you can run the following command to mock http server
+
+```
+clank --yaml http_serv.yaml
+```
+
+look at the yaml 
+```
+kind: http
+port: 9527
+server:
+  methods:
+    - name: testApi
+      path: /test
+      method: GET
+      defaultResponse: |-
+        {"code": 0,"message": "success",
+           "data": {"name": "Jerry","age": 18}
+        }
+    - name: testApi2
+      path: /user/:userID/order/:orderNo
+      method: POST
+      defaultResponse: |-
+        {
+          "code": 0, "message": "success",
+          "data": {
+            "orderNo": "$param.orderNo",
+            "userID": $param.userID,
+            "desc": "{{RandString 5 20}}"
+                  }
+        }
+    - name: testApi3
+      path: /user/:userID/createOrder
+      method: POST
+      defaultResponse: |-
+        {
+          "code": 0, "message": "success",
+          "data": {
+            "orderNo": "OrderNo{{RandString 5 10}}",
+            "userID": $param.userID,
+            "desc": "{{RandString 5 20}}"
+          }
+        }
+      conditions:
+        - condition: '$query.userID == 1'
+          response: |-
+            {
+              "code": 0, "message": "success",
+              "data": {
+                "orderNo": "OrderNo{{RandString 5 10}}",
+                "userID": $param.userID,
+                "desc": "query.userID == 1"
+              }
+            }
+        - condition: '$param.userID == 1'
+          response: |-
+            {
+              "code": 0, "message": "success",
+              "data": {
+                "orderNo": "OrderNo{{RandString 5 10}}",
+                "userID": $param.userID,
+                "desc": "param.userID == 1"
+              }
+            }
+        - condition: '$body.userID == 1 && $query.userID == 2'
+          response: |-
+            {
+              "code": 0, "message": "success",
+              "data": {
+                "orderNo": "OrderNo{{RandString 5 10}}",
+                "userID": $body.userID,
+                "queryUserID": $query.userID,
+                "desc": "body.userID == 1 && query.userID == 2"
+              }
+            }
+        - condition: '$body.userID == 1'
+          response: |-
+            {
+              "code": 0, "message": "success",
+              "data": {
+                "orderNo": "OrderNo{{RandString 5 10}}",
+                "userID": $param.userID,
+                "desc": "body.userID == 1"
+              }
+            }
 ```
