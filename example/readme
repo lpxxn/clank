@@ -1,0 +1,55 @@
+
+## mock grpc
+clank --yaml grpc_serv.yaml
+
+
+### grpcurl test
+
+```
+grpcurl -plaintext \
+-import-path $GOPATH/src \
+-import-path ../internal/testdata/ \
+-d '{
+  "id": 1
+}' \
+-proto protos/api/student_api.proto \
+127.0.0.1:54312 api.StudentSrv/StudentByID
+```
+
+```
+grpcurl -plaintext \
+-import-path $GOPATH/src \
+-import-path ../internal/testdata/ \
+-d '{
+  "id": 111
+}' \
+-proto protos/api/student_api.proto \
+127.0.0.1:54312 api.StudentSrv/StudentByID
+```
+
+```
+grpcurl -plaintext \
+-import-path $GOPATH/src \
+-import-path ../internal/testdata/ \
+-d '{
+  "id": 456
+}' \
+-proto protos/api/student_api.proto \
+127.0.0.1:54312 api.StudentSrv/StudentByID
+```
+
+```
+grpcurl -plaintext \
+-import-path $GOPATH/src \
+-import-path ../internal/testdata/ \
+-d '{
+  "id": 1,
+  "name":"test"
+}' \
+-proto protos/api/student_api.proto \
+127.0.0.1:54312 api.StudentSrv/NewStudent
+
+```
+internal/testdata/protos/api/student_api.proto
+
+## mock http
