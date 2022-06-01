@@ -86,10 +86,10 @@ servers:
       - name: StudentByID
         defaultResponse: '{"studentList":[{"name":"test","age":1},{"name":"{{RandString 3 10}}","age":{{ RandInt32 }}}]}'
 ```
-`{{ RandInt32 }}` is a template func, you can use it to generate random int32 value
-`{{ RandInt64 }}` is a template func, you can use it to generate random int64 value
-`{{ RandString 3 10 }}` is a template func, you can use it to generate random string value
-`{{ RandFixLenString 3 }}` is a template func, you can use it to generate random fixed length string value
+`{{ RandInt32 }}` is a template func, you can use it to generate random int32 value    
+`{{ RandInt64 }}` is a template func, you can use it to generate random int64 value   
+`{{ RandString 3 10 }}` is a template func, you can use it to generate random string value   
+`{{ RandFixLenString 3 }}` is a template func, you can use it to generate random fixed length string value    
 
 use `condition` to define conditions, in `condition` you can use `$request.xxx` to get request data
 
