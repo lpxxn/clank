@@ -62,7 +62,18 @@ servers:
         defaultResponse: '{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}'
 
 ```
+you can use `importPath` and `protoPath` to import proto files
+```
+importPath:
+  - ../internal/testdata/
+protoPath:
+  - protos/api/student_api.proto
+```
+or you can use `protosetPath` to import protoset files
 
+```
+protosetPath: ../internal/testdata/protos/test.protoset
+```
 
 ## mock http server
 

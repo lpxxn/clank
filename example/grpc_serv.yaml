@@ -1,9 +1,10 @@
 kind: grpc
 port: 54312
-importPath:
-  - ../internal/testdata/
-protoPath:
-  - protos/api/student_api.proto
+#importPath:
+#  - ../internal/testdata/
+#protoPath:
+#  - protos/api/student_api.proto
+protosetPath: ../internal/testdata/protos/test.protoset
 servers:
   - name: api.StudentSrv
     methods:

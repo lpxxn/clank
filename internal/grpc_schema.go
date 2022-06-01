@@ -29,7 +29,13 @@ func (g *grpcSchema) Validate() error {
 }
 
 func (g *grpcSchema) StartServer(port int) error {
-	serv, err := ParseServerMethodsFromProto(g.ImportPath, g.ProtoPath)
+	var serv *gRpcServer
+	var err error
+	if g.ProtosetPath != "" {
+		serv, err = ParseServerMethodsFromProtoset(g.ProtosetPath)
+	} else {
+		serv, err = ParseServerMethodsFromProto(g.ImportPath, g.ProtoPath)
+	}
 	if err != nil {
 		return err
 	}
