@@ -62,6 +62,8 @@ servers:
         defaultResponse: '{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}'
 
 ```
+
+### proto and protoset file
 you can use `importPath` and `protoPath` to import proto files
 ```
 importPath:
@@ -74,6 +76,32 @@ or you can use `protosetPath` to import protoset files
 ```
 protosetPath: ../internal/testdata/protos/test.protoset
 ```
+
+### rpc server & method
+you can use `servers` to define rpc server and method
+```
+servers:
+  - name: api.StudentSrv
+    methods:
+      - name: StudentByID
+        defaultResponse: '{"studentList":[{"name":"test","age":1},{"name":"{{RandString 3 10}}","age":{{ RandInt32 }}}]}'
+```
+`{{ RandInt32 }}` is a template func, you can use it to generate random int32 value
+`{{ RandInt64 }}` is a template func, you can use it to generate random int64 value
+`{{ RandString 3 10 }}` is a template func, you can use it to generate random string value
+`{{ RandFixLenString 3 }}` is a template func, you can use it to generate random fixed length string value
+
+use `condition` to define conditions, in `condition` you can use `$request.xxx` to get request data
+
+```
+        conditions:
+          - condition: '$request.id == 111'
+            response: '{"studentList":[{"name":"test1111","age":111}]}'
+          - condition: '"$header.x-header" == "test"'
+            response: '{"studentList":[{"name":"header","age":222}]}'
+```
+if `condition` is true, the response will be used.
+
 
 ## mock http server
 
