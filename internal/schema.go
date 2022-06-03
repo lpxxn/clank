@@ -118,14 +118,14 @@ type CallbackDescription struct {
 }
 
 type HttpCallbackDescription struct {
-	Method           string              `yaml:"method"`
-	URL              string              `yaml:"url" json:"url"`
-	Header           map[string]string   `yaml:"header" json:"header"`
-	Body             string              `yaml:"body" json:"body"`
-	DelayTime        int64               `yaml:"delayTime" json:"delayTime"`
-	urlParameters    map[string]struct{} `yaml:"-" json:"-"`
-	headerParameters map[string]struct{} `yaml:"-" json:"-"`
-	bodyParameters   map[string]struct{} `yaml:"-" json:"-"`
+	Method           string            `yaml:"method"`
+	URL              string            `yaml:"url" json:"url"`
+	Header           map[string]string `yaml:"header" json:"header"`
+	Body             string            `yaml:"body" json:"body"`
+	DelayTime        int64             `yaml:"delayTime" json:"delayTime"`
+	urlParameters    map[string]struct{}
+	headerParameters map[string]struct{}
+	bodyParameters   map[string]struct{}
 }
 
 func (s *CallbackDescription) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -142,7 +142,16 @@ func (s *CallbackDescription) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return nil
 }
 
-type CallbackDescriptionList []*CallbackDescription
+type HttpCallbackDescriptionList []*HttpCallbackDescription
+
+func (c HttpCallbackDescriptionList) Validate() error {
+	for _, item := range c {
+		if err := item.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (h *HttpCallbackDescription) Validate() error {
 	if h.Method == "" {
