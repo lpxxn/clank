@@ -134,6 +134,17 @@ func ParamValue(param map[string]struct{}, jBody string) (map[string]interface{}
 	return paramValue, nil
 }
 
+func ReplaceParamValue(param map[string]struct{}, jBody string, originStr string) (string, error) {
+	paramValue, err := ParamValue(param, jBody)
+	if err != nil {
+		return "", err
+	}
+	for k, v := range paramValue {
+		originStr = strings.ReplaceAll(originStr, "$"+k, fmt.Sprintf("%v", v))
+	}
+	return originStr, nil
+}
+
 func ValuableBoolExpression(expressionStr string) (bool, error) {
 	expression, err := govaluate.NewEvaluableExpression(expressionStr)
 	if err != nil {

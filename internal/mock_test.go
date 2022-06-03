@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -246,4 +247,12 @@ func TestJson(t *testing.T) {
 	}
 
 	t.Log(m)
+}
+
+func TestHttRequest1(t *testing.T) {
+	b, err := NewHttpRequestWithHeader(context.Background(), "GET", "https://www.github.com", []byte(`{"id": 1233}`), map[string]string{"Content-Type": "application/json"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
 }

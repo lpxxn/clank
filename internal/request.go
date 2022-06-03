@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func NewHttpRequestWithHeader(ctx context.Context, url string, method string, body []byte, header map[string]string) ([]byte, error) {
+func NewHttpRequestWithHeader(ctx context.Context, method string, url string, body []byte, header map[string]string) ([]byte, error) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err

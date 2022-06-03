@@ -1,9 +1,13 @@
 package internal
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	jsonIter "github.com/json-iterator/go"
+	"github.com/lpxxn/clank/internal/clanklog"
 )
 
 var jsonIterator = jsonIter.ConfigCompatibleWithStandardLibrary
@@ -114,11 +118,14 @@ type CallbackDescription struct {
 }
 
 type HttpCallbackDescription struct {
-	URL       string            `yaml:"url" json:"url"`
-	Form      map[string]string `yaml:"form" json:"form"`
-	Header    map[string]string `yaml:"header" json:"header"`
-	Body      string            `yaml:"body" json:"body"`
-	DelayTime int64             `yaml:"delayTime" json:"delayTime"`
+	Method           string              `yaml:"method"`
+	URL              string              `yaml:"url" json:"url"`
+	Header           map[string]string   `yaml:"header" json:"header"`
+	Body             string              `yaml:"body" json:"body"`
+	DelayTime        int64               `yaml:"delayTime" json:"delayTime"`
+	urlParameters    map[string]struct{} `yaml:"-" json:"-"`
+	headerParameters map[string]struct{} `yaml:"-" json:"-"`
+	bodyParameters   map[string]struct{} `yaml:"-" json:"-"`
 }
 
 func (s *CallbackDescription) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -136,3 +143,62 @@ func (s *CallbackDescription) UnmarshalYAML(unmarshal func(interface{}) error) e
 }
 
 type CallbackDescriptionList []*CallbackDescription
+
+func (h *HttpCallbackDescription) Validate() error {
+	if h.Method == "" {
+		return errors.New("callback method is required")
+	}
+	if h.URL == "" {
+		return errors.New("callback URL is required")
+	}
+	if h.Body == "" {
+		return errors.New("callback method is required")
+	}
+	if _, ok := methodMap[h.Method]; !ok {
+		return errors.New("callback method is invalid")
+	}
+	h.urlParameters = ParametersFromStr(h.URL, httpRegex)
+	for _, v := range h.Header {
+		for key, item := range ParametersFromStr(v, httpRegex) {
+			h.headerParameters[key] = item
+		}
+	}
+	h.bodyParameters = ParametersFromStr(h.Body, httpRegex)
+	return nil
+}
+
+func (h *HttpCallbackDescription) makeRequest(ctx context.Context, jBody string) error {
+	var err error
+	url := h.URL
+	url, err = ReplaceParamValue(h.urlParameters, jBody, url)
+	if err != nil {
+		clanklog.Errorf("callback get url param value error: %+v", err)
+		return err
+	}
+	headerValue, err := ParamValue(h.headerParameters, jBody)
+	if err != nil {
+		clanklog.Errorf("callback get header param value error: %+v", err)
+		return err
+	}
+	header := map[string]string{}
+	for headerKey, headerV := range h.Header {
+		for k, v := range headerValue {
+			headerV = strings.ReplaceAll(headerV, "$"+k, fmt.Sprintf("%v", v))
+		}
+		header[headerKey] = headerV
+	}
+	body := h.Body
+	body, err = ReplaceParamValue(h.bodyParameters, jBody, body)
+	if err != nil {
+		clanklog.Errorf("callback get body param value error: %s", err)
+		return err
+	}
+
+	resp, err := NewHttpRequestWithHeader(ctx, h.Method, url, []byte(body), header)
+	if err != nil {
+		clanklog.Errorf("callback url: %s request error: %+v", url, err)
+		return err
+	}
+	clanklog.Infof("callback url: %s response body: %s", url, string(resp))
+	return nil
+}

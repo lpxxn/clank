@@ -118,7 +118,6 @@ func (h *httpServer) NotFoundHandler(c *gin.Context) {
 	c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
 }
 func (h *httpServer) commonHandler(c *gin.Context) {
-	//clanklog.Println("method: ", c.Request.Method, " path: ", c.Request.URL.Path)
 	if _, ok := h.serverMethod[c.FullPath()]; !ok {
 		c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
 		return

@@ -1,10 +1,12 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/lpxxn/clank/internal/clanklog"
 )
@@ -60,6 +62,7 @@ type httpMethodDescriptor struct {
 	DefaultResponse    string                           `yaml:"defaultResponse"`
 	Conditions         ResponseConditionDescriptionList `yaml:"conditions" json:"conditions"`
 	responseParameters map[string]struct{}              `yaml:"-" json:"-"`
+	HttpCallback       []HttpCallbackDescription        `yaml:"httpCallback"`
 }
 
 var httpRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
@@ -151,4 +154,22 @@ func (h *httpServerDescriptor) getResponseByParameters(body string, jBody string
 		conditionStr = strings.ReplaceAll(conditionStr, "$"+k, fmt.Sprintf("%v", v))
 	}
 	return GenerateDefaultStringTemplate(conditionStr)
+}
+
+func (h *httpServerDescriptor) makeCallback(methodName string, jBody string) {
+	method := h.methodMap[methodName]
+	if len(method.HttpCallback) == 0 {
+		return
+	}
+	for _, callback := range method.HttpCallback {
+		delayTime := callback.DelayTime
+		if delayTime <= 0 {
+			delayTime = 1
+		}
+		time.AfterFunc(time.Duration(delayTime)*time.Second, func() {
+			if err := callback.makeRequest(context.Background(), jBody); err != nil {
+				clanklog.Errorf("callback err: %+v", err)
+			}
+		})
+	}
 }
