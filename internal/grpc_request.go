@@ -16,7 +16,7 @@ func NewHttpRequestWithHeader(ctx context.Context, url string, method string, bo
 	for k, v := range header {
 		req.Header.Add(k, v)
 	}
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	req.WithContext(ctx)
 	client := http.Client{}
