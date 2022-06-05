@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lpxxn/clank/internal/clanklog"
@@ -52,6 +53,15 @@ func TestSchema1(t *testing.T) {
 					"desc": "{{RandString 5 20}}"
 				}
 			}`,
+			HttpCallback: HttpCallbackDescriptionList{
+				&HttpCallbackDescription{
+					Method:    HTTPPOSTMethod,
+					URL:       "https://github.com/lpxxn/clank?userID=$param.userID",
+					Header:    map[string]string{"x-header": "v1", "token": "$header.Token"},
+					Body:      `{"desc": $response.data.desc}`,
+					DelayTime: 1,
+				},
+			},
 		},
 		{
 			Name:   "testApi2",
@@ -122,11 +132,12 @@ func TestSchema1(t *testing.T) {
 	form := url.Values{"name": {"Jerry"}, "age": {"18"}}
 	r, _ := http.NewRequest(HTTPPOSTMethod, "/user/1233/order/13", strings.NewReader(form.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Set("Token", "123456")
 	testHTTPResponse(t, serv.engine, r, func(w *httptest.ResponseRecorder) bool {
 		t.Log(w.Body.String())
 		return true
 	})
-
+	time.Sleep(time.Second * 2)
 	form = url.Values{"name": {"Jerry"}, "age": {"18"}, "userID": {"1"}}
 	r, _ = http.NewRequest(HTTPPOSTMethod, "/user/1233/createOrder?userID=2", strings.NewReader(form.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")

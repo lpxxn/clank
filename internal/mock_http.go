@@ -37,11 +37,12 @@ type httpServer struct {
 	serverMethod map[string]string
 	engine       *gin.Engine
 	getResponse  func(methodName string, jBody string) (string, error)
+	httpCallBack func(methodName string, jBody string)
 }
 
 func NewHttpServer(desc *httpServerDescriptor) *httpServer {
 	rev := &httpServer{engine: gin.Default(), serverMethod: map[string]string{},
-		getResponse: desc.GetResponse}
+		getResponse: desc.GetResponse, httpCallBack: desc.makeCallback}
 	for _, item := range desc.MethodDescriptor {
 		rev.serverMethod[item.Path] = item.Method
 	}
@@ -78,6 +79,10 @@ func metadataHandler(c *gin.Context) {
 	for k, v := range c.Request.Form {
 		form[k] = v[0]
 	}
+	header := map[string]string{}
+	for k, v := range c.Request.Header {
+		header[k] = v[0]
+	}
 	if jBody, err = sjson.Set(jBody, "param", param); err != nil {
 		c.Writer.WriteString(err.Error())
 	}
@@ -86,6 +91,9 @@ func metadataHandler(c *gin.Context) {
 	}
 
 	if jBody, err = sjson.Set(jBody, "form", form); err != nil {
+		c.Writer.WriteString(err.Error())
+	}
+	if jBody, err = sjson.Set(jBody, "header", header); err != nil {
 		c.Writer.WriteString(err.Error())
 	}
 	clanklog.Infof("jBody: %s", jBody)
@@ -122,11 +130,17 @@ func (h *httpServer) commonHandler(c *gin.Context) {
 		c.String(http.StatusNotFound, fmt.Sprintf("not found method: %s, path: %s", c.Request.Method, c.Request.URL.Path))
 		return
 	}
-	resp, err := h.getResponse(c.FullPath(), MustGetJBody(c))
+	jBody := MustGetJBody(c)
+	resp, err := h.getResponse(c.FullPath(), jBody)
 	if err != nil {
 		c.String(http.StatusExpectationFailed, err.Error())
 		return
 	}
+	jBody, err = sjson.SetRaw(jBody, "response", resp)
+	if err != nil {
+		clanklog.Errorf("commonHandler sjson.Set error: %s", err.Error())
+	}
+	defer h.httpCallBack(c.FullPath(), jBody)
 	c.String(http.StatusOK, resp)
 }
 

@@ -65,7 +65,8 @@ type httpMethodDescriptor struct {
 	HttpCallback       HttpCallbackDescriptionList      `yaml:"httpCallback"`
 }
 
-var httpRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
+var httpRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form|header)\.\w+[.\w]*)`)
+var httpCallbackRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form|header|response)\.\w+[.\w]*)`)
 
 func (d *httpMethodDescriptor) Validate() error {
 	if d.Name == "" {
