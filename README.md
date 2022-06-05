@@ -9,6 +9,7 @@
 
 - [x] Mock Http server 
 - [x] Mock Grpc server
+- [x] Returns the specified response data according to custom conditions  
 - [x] Template function
 - [x] Get value from Http&Grpc request
 - [x] Response data based on custom conditions
