@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/Knetic/govaluate"
+	"github.com/tidwall/sjson"
 )
 
 const testPort int = 54312
@@ -255,4 +256,12 @@ func TestHttRequest1(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(string(b))
+	j := ``
+	j, err = sjson.SetRaw(j, "t", `{"a": 1, "b": "c"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(j)
+	t.Log(jsonIterator.Get([]byte(j), "t", "a").GetInterface())
+	t.Log(jsonIterator.Get([]byte(j), "t", "b").GetInterface())
 }
