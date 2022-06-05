@@ -62,10 +62,11 @@ type httpMethodDescriptor struct {
 	DefaultResponse    string                           `yaml:"defaultResponse"`
 	Conditions         ResponseConditionDescriptionList `yaml:"conditions" json:"conditions"`
 	responseParameters map[string]struct{}              `yaml:"-" json:"-"`
-	HttpCallback       []HttpCallbackDescription        `yaml:"httpCallback"`
+	HttpCallback       HttpCallbackDescriptionList      `yaml:"httpCallback"`
 }
 
-var httpRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form)\.\w+[.\w]*)`)
+var httpRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form|header)\.\w+[.\w]*)`)
+var httpCallbackRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form|header|response)\.\w+[.\w]*)`)
 
 func (d *httpMethodDescriptor) Validate() error {
 	if d.Name == "" {
@@ -94,7 +95,7 @@ func (d *httpMethodDescriptor) Validate() error {
 		condition.Parameters = ParametersFromStr(condition.Condition, httpRegex)
 		condition.ResponseParameters = ParametersFromStr(condition.Response, httpRegex)
 	}
-	return nil
+	return d.HttpCallback.Validate()
 }
 
 func (h *httpServerDescriptor) GetResponse(methodName string, jBody string) (string, error) {
