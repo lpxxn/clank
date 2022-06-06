@@ -21,6 +21,16 @@ server:
             "desc": "{{RandString 5 20}}"
                   }
         }
+      httpCallback:
+        - method: GET
+          url: http://localhost:9527/user/$param.userID/createOrder
+          body: |-
+            {
+              "orderNo": "$param.orderNo",
+              "userID": $param.userID,
+              "desc": "$response.data.desc"
+            } 
+
     - name: testApi3
       path: /user/:userID/createOrder
       method: POST
@@ -28,7 +38,6 @@ server:
         {
           "code": 0, "message": "success",
           "data": {
-            "orderNo": "OrderNo{{RandString 5 10}}",
             "userID": $param.userID,
             "desc": "{{RandString 5 20}}"
           }

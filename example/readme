@@ -65,3 +65,13 @@ grpcurl -plaintext \
 internal/testdata/protos/api/student_api.proto
 
 ## mock http
+
+
+```
+curl --request POST 'http://localhost:9527/user/1/order/no123abc' \
+--header 'Content-Type: application/json' \
+--data '{
+  "id": 1,
+  "name":"test"
+}'
+```
