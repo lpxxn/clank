@@ -29,5 +29,11 @@ servers:
             response: '{"code":"OK","desc":"OKabc","data":"eyJzdHVkZW50TGlzdCI6W3sibmFtZSI6ImhlaWhlaSIsImFnZSI6MX0seyJuYW1lIjoiaGFoYWhhIiwiYWdlIjo5fV19"}'
           - condition: '"$header.x-header" == "test"'
             response: '{"code":"OK","desc":"OKHeader","data":"eyJzdHVkZW50TGlzdCI6W3sibmFtZSI6ImhlaWhlaSIsImFnZSI6MX0seyJuYW1lIjoiaGFoYWhhIiwiYWdlIjo5fV19"}'
+        httpCallback:
+          - method: GET
+            url: https://github.com/lpxxn/clank?userName=$request.name
+            body: |-
+              {"desc": $response.desc, "data": "$response.data"}
+
       - name: AllStudent
         defaultResponse: '{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}'

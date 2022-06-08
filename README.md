@@ -190,3 +190,13 @@ server:
               }
             }
 ```
+### Send Http request after mock server response
+you can use  `httpCallback` to send http request after mock server response
+
+```
+        httpCallback:
+          - method: GET
+            url: https://github.com/lpxxn/clank?userName=$request.name
+            body: |-
+              {"desc": $response.desc, "data": "$response.data"}
+```
