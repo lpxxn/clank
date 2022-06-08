@@ -12,7 +12,7 @@
 - [x] Returns the specified response data according to custom conditions  
 - [x] Template function
 - [x] Get value from Http&Grpc request
-- [ ] Send Http or Grpc request after mock server response  
+- [x] Send Http request after mock server response  
 
 
 ## build & install
