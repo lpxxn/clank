@@ -114,6 +114,7 @@ type GrpcMethodDescription struct {
 	DefaultMetaData map[string]string                `yaml:"defaultMetaData"`
 	Conditions      ResponseConditionDescriptionList `yaml:"conditions" json:"conditions"`
 	Parameters      map[string]string                `yaml:"-" json:"-"`
+	HttpCallback    HttpCallbackDescriptionList      `yaml:"httpCallback"`
 }
 
 const grpcRequestParam = "request"
@@ -141,5 +142,5 @@ func (m *GrpcMethodDescription) Validate() error {
 		}
 		c.ResponseParameters = ParametersFromStr(c.Response, grpcRegex)
 	}
-	return nil
+	return m.HttpCallback.Validate()
 }

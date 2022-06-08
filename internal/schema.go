@@ -166,10 +166,10 @@ func (h *HttpCallbackDescription) Validate() error {
 	if _, ok := methodMap[h.Method]; !ok {
 		return errors.New("callback method is invalid")
 	}
-	h.urlParameters = ParametersFromStr(h.URL, httpRegex)
+	h.urlParameters = ParametersFromStr(h.URL, httpCallbackRegex)
 	h.headerParameters = map[string]struct{}{}
 	for _, v := range h.Header {
-		for key, item := range ParametersFromStr(v, httpRegex) {
+		for key, item := range ParametersFromStr(v, httpCallbackRegex) {
 			h.headerParameters[key] = item
 		}
 	}

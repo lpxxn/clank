@@ -66,7 +66,7 @@ type httpMethodDescriptor struct {
 }
 
 var httpRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form|header)\.\w+[.\w]*)`)
-var httpCallbackRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form|header|response)\.\w+[.\w]*)`)
+var httpCallbackRegex = regexp.MustCompile(`\$(?P<parameter>(param|body|query|form|header|response|request)\.\w+[.\w]*)`)
 
 func (d *httpMethodDescriptor) Validate() error {
 	if d.Name == "" {

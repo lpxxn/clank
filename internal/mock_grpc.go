@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -29,7 +30,8 @@ type gRpcServer struct {
 	rpcServiceDescGroup []*gRpcServiceDesc
 	serverNames         map[string]struct{}
 
-	GetOutputJson func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, jBody string) ([]byte, error)
+	GetOutputJson    func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, jBody string) ([]byte, error)
+	makeHttpCallback func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, jBody string)
 }
 
 type MockGrpcResponse struct {
@@ -185,14 +187,9 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 			return nil, err
 		}
 
-		//dynamicMsg, err := dynamic.AsDynamicMessage(inputParam)
-		//if err != nil {
-		//	return nil, err
-		//}
-		//inputJsonBody, err := dynamicMsg.MarshalJSON()
 		ctx = g.setRequestJBody(ctx, inputParam)
-
-		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, g.getJBody(ctx))
+		jBody := g.getJBody(ctx)
+		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, jBody)
 		clanklog.Info(string(outputJson))
 		if err != nil {
 			return nil, err
@@ -200,6 +197,12 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 		if err := dynamicOutput.UnmarshalJSON(outputJson); err != nil {
 			return nil, err
 		}
+
+		jBody, err = sjson.SetRaw(jBody, "response", string(outputJson))
+		if err != nil {
+			clanklog.Errorf("commonHandler sjson.Set error: %s", err.Error())
+		}
+		defer g.makeHttpCallback(serviceDesc, methodDesc, jBody)
 		return dynamicOutput, nil
 	}
 }
@@ -362,6 +365,28 @@ func SetOutputFunc(schemaList GrpcServerDescriptionList, gRpcServ *gRpcServer) e
 			}
 		}
 		return GenerateDefaultTemplate(methodSchema.DefaultResponse)
+	}
+
+	gRpcServ.makeHttpCallback = func(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor, jBody string) {
+		methodSchema, err := schemaList.GetMethod(serviceDesc.ServiceName, methodDesc.GetName())
+		if err != nil {
+			clanklog.Errorf("server: %s method: %s, err: [%+v]", serviceDesc.ServiceName, methodDesc.GetName(), err)
+			return
+		}
+		if len(methodSchema.HttpCallback) == 0 {
+			return
+		}
+		for _, callback := range methodSchema.HttpCallback {
+			delayTime := callback.DelayTime
+			if delayTime <= 0 {
+				delayTime = 1
+			}
+			time.AfterFunc(time.Duration(delayTime)*time.Second, func() {
+				if err := callback.makeRequest(context.Background(), jBody); err != nil {
+					clanklog.Errorf("callback err: %+v", err)
+				}
+			})
+		}
 	}
 	return nil
 }

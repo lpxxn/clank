@@ -16,7 +16,6 @@ import (
 const testPort int = 54312
 
 func TestServerDesc(t *testing.T) {
-
 	grpcSchema := &grpcSchema{
 		ImportPath: []string{"./testdata/"},
 		ProtoPath:  []string{"protos/api/student_api.proto"},
@@ -42,7 +41,15 @@ func TestServerDesc(t *testing.T) {
 								Response:  `{"code":"OK","desc":"OKabc","data":"eyJzdHVkZW50TGlzdCI6W3sibmFtZSI6ImhlaWhlaSIsImFnZSI6MX0seyJuYW1lIjoiaGFoYWhhIiwiYWdlIjo5fV19"}`,
 							},
 						},
-					},
+						HttpCallback: HttpCallbackDescriptionList{
+							&HttpCallbackDescription{
+								Method:    HTTPPOSTMethod,
+								URL:       "https://github.com/lpxxn/clank?userName=$request.name",
+								Header:    map[string]string{"x-header": "v1", "token": "$response.data"},
+								Body:      `{"desc": $response.desc}`,
+								DelayTime: 1,
+							},
+						}},
 					&GrpcMethodDescription{ /// {"id":1}
 						Name:            "StudentByID",
 						DefaultResponse: `{"studentList":[{"name":"test","age":1},{"name":"test2","age":2}]}`,
