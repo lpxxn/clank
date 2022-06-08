@@ -190,7 +190,7 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 		ctx = g.setRequestJBody(ctx, inputParam)
 		jBody := g.getJBody(ctx)
 		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, jBody)
-		clanklog.Info(string(outputJson))
+		clanklog.Infof("output: %s", string(outputJson))
 		if err != nil {
 			return nil, err
 		}
