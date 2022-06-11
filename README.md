@@ -210,4 +210,5 @@ you can use  `httpCallback` to send http request after mock server response
 ```
 
 ### Log
-use `CLANK_LOG_LEVEL=info` environment variable to set log level, default is `error`
+use `CLANK_LOG_LEVEL=info` environment variable to set log level, default is `error`    
+eg: `CLANK_LOG_LEVEL=info nohup clank --yaml http_serv.yaml`
