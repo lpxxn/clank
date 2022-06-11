@@ -16,8 +16,16 @@
 
 
 ## build & install
+```
+go install github.com/lpxxn/clank/clank@latest
+```
 
-
+### build from source
+```
+git clone git@github.com:lpxxn/clank.git
+cd clank
+make build
+```
 ## mock rpc server
 in the example directory, you can run the following command to mock rpc server
 
