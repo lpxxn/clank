@@ -76,6 +76,24 @@ servers:
         defaultResponse: '{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}'
 
 ```
+default response is required, if you have conditions, you must specify the response too 
+when the condition is matched, the response will be returned    
+eg:
+```
+  - name: StudentByID
+    defaultResponse: '{"studentList":[{"name":"test","age":1},{"name":"{{RandString 3 10}}","age":{{ RandInt32 }}}]}'
+    conditions:
+      - condition: '$request.id == 111'
+        response: '{"studentList":[{"name":"test1111","age":111}]}'
+      - condition: '"$header.x-header" == "test"'
+        response: '{"studentList":[{"name":"header","age":222}]}'
+      - condition: $request.id == 456
+        response: |-
+          {"studentList":[{"name":"{{RandFixLenString 3}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
+            {"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
+            {"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}]}
+```
+if `id` field in the request is `111`, the response will be `{"studentList":[{"name":"test1111","age":111}]}`
 
 ### proto and protoset file
 you can use `importPath` and `protoPath` to import proto files
