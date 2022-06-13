@@ -76,6 +76,7 @@ servers:
         defaultResponse: '{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}'
 
 ```
+### conditions
 default response is required, if you have conditions, you must specify the response too, when the condition is matched, the response will be returned, if not, the default response will be returned.    
 eg:
 ```
