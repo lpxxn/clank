@@ -216,17 +216,6 @@ server:
               }
             }
 ```
-### Send Http request after mock server response
-you can use  `httpCallback` to send http request after mock server response
-
-```
-        httpCallback:
-          - method: GET
-            url: https://github.com/lpxxn/clank?userName=$request.name
-            body: |-
-              {"desc": $response.desc, "data": "$response.data"}
-```
-
 supported values
 * $param.xxx   get value from url data, eg: url: `/user/:userID/order/:orderNo` you can use `$param.userID` to get the value
 * $body.xxx    get value from post body eg: body is `{"name": "hello"}` use `$body.name` to get value
@@ -235,8 +224,8 @@ supported values
 * $header.xxx  get value from request header
 * $response.xxx get value from response body
 
-## send http request after mock server response
-use `httpCallback` to send a http request after response
+### Send Http request after mock server response
+you can use  `httpCallback` to send http request after mock server response
 ```
 httpCallback:
   - method: GET
