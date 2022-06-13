@@ -76,25 +76,6 @@ servers:
         defaultResponse: '{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}'
 
 ```
-### conditions
-default response is required, if you have conditions, you must specify the response too, when the condition is matched, the response will be returned, if not, the default response will be returned.    
-eg:
-```
-  - name: StudentByID
-    defaultResponse: '{"studentList":[{"name":"test","age":1},{"name":"{{RandString 3 10}}","age":{{ RandInt32 }}}]}'
-    conditions:
-      - condition: '$request.id == 111'
-        response: '{"studentList":[{"name":"test1111","age":111}]}'
-      - condition: '"$header.x-header" == "test"'
-        response: '{"studentList":[{"name":"header","age":222}]}'
-      - condition: $request.id == 456
-        response: |-
-          {"studentList":[{"name":"{{RandFixLenString 3}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
-            {"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
-            {"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}]}
-```
-if `id` field in the request is `111`, the response will be `{"studentList":[{"name":"test1111","age":111}]}`
-
 ### proto and protoset file
 you can use `importPath` and `protoPath` to import proto files
 ```
@@ -123,17 +104,29 @@ servers:
 `{{ RandString 3 10 }}` is a template func, you can use it to generate random string value   
 `{{ RandFixLenString 3 }}` is a template func, you can use it to generate random fixed length string value    
 
-use `condition` to define conditions, in `condition` you can use `$request.xxx` to get request data
 
+### conditions
+default response is required, use `condition` to define conditions, you must specify the response too, when the condition is matched, the response will be returned, if not, the default response will be returned.    
+eg:
 ```
-        conditions:
-          - condition: '$request.id == 111'
-            response: '{"studentList":[{"name":"test1111","age":111}]}'
-          - condition: '"$header.x-header" == "test"'
-            response: '{"studentList":[{"name":"header","age":222}]}'
+  - name: StudentByID
+    defaultResponse: '{"studentList":[{"name":"test","age":1},{"name":"{{RandString 3 10}}","age":{{ RandInt32 }}}]}'
+    conditions:
+      - condition: '$request.id == 111'
+        response: '{"studentList":[{"name":"test1111","age":111}]}'
+      - condition: '"$header.x-header" == "test"'
+        response: '{"studentList":[{"name":"header","age":222}]}'
+      - condition: $request.id == 456
+        response: |-
+          {"studentList":[{"name":"{{RandFixLenString 3}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
+            {"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}, 
+            {"name":"{{RandString 3 10}}","id": {{RandInt64}},"age":{{ RandInt32 }}}]}
 ```
-if `condition` is true, the response will be used.
-
+if `id` field in the request is `111`, the response will be `{"studentList":[{"name":"test1111","age":111}]}`    
+supported values
+* $request.xxx   get value from request data, eg: `$request.id` `$request.name`
+* $header.xxx    get value from header metadata eg: `$header.clientID`
+* $response.xxx  get value from response data eg: `$response.code` `$response.data.id`
 
 ## mock http server
 
@@ -233,6 +226,25 @@ you can use  `httpCallback` to send http request after mock server response
             body: |-
               {"desc": $response.desc, "data": "$response.data"}
 ```
+
+supported values
+* $param.xxx   get value from url data, eg: url: `/user/:userID/order/:orderNo` you can use `$param.userID` to get the value
+* $body.xxx    get value from post body eg: body is `{"name": "hello"}` use `$body.name` to get value
+* $query.xxx   get value from url query data eg: `/user?id=123` use `$query.id` to get value
+* $form.xxx    get value from form
+* $header.xxx  get value from request header
+* $response.xxx get value from response body
+
+## send http request after mock server response
+use `httpCallback` to send a http request after response
+```
+httpCallback:
+  - method: GET
+    url: https://github.com/lpxxn/clank?userName=$request.name
+    body: |-
+      {"desc": $response.desc, "data": "$response.data"}
+```
+you can use server method values to get value and send customer data.
 
 ### Log
 use `CLANK_LOG_LEVEL=info` environment variable to set log level, default is `error`    
