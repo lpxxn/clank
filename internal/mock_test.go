@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/Knetic/govaluate"
+	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/sjson"
 )
 
@@ -50,7 +51,7 @@ func TestServerDesc(t *testing.T) {
 								DelayTime: 1,
 							},
 						}},
-					&GrpcMethodDescription{ /// {"id":1}
+					&GrpcMethodDescription{
 						Name:            "StudentByID",
 						DefaultResponse: `{"studentList":[{"name":"test","age":1},{"name":"test2","age":2}]}`,
 						Conditions: []*ResponseConditionDescription{
@@ -67,6 +68,20 @@ func TestServerDesc(t *testing.T) {
 							},
 						},
 					},
+					&GrpcMethodDescription{
+						Name:            "AllStudent",
+						DefaultResponse: `{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"hello world","age":2019727887}]}`,
+						DefaultMetaData: nil,
+						Parameters:      nil,
+						HttpCallback: HttpCallbackDescriptionList{
+							&HttpCallbackDescription{
+								Method:    HTTPPOSTMethod,
+								URL:       "https://github.com/lpxxn/clank?userName=$response.studentList.0.age",
+								Header:    map[string]string{"x-header": "v1", "token": "$response.studentList.0.id"},
+								Body:      `{"desc": $response.studentList.1.name}`,
+								DelayTime: 1,
+							},
+						}},
 				},
 			},
 		},
@@ -259,16 +274,20 @@ func TestJson(t *testing.T) {
 
 func TestHttRequest1(t *testing.T) {
 	b, err := NewHttpRequestWithHeader(context.Background(), "GET", "https://www.github.com", []byte(`{"id": 1233}`), map[string]string{"Content-Type": "application/json"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	t.Log(string(b))
 	j := ``
 	j, err = sjson.SetRaw(j, "t", `{"a": 1, "b": "c"}`)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	t.Log(j)
 	t.Log(jsonIterator.Get([]byte(j), "t", "a").GetInterface())
 	t.Log(jsonIterator.Get([]byte(j), "t", "b").GetInterface())
+
+}
+
+func TestJson1(t *testing.T) {
+	j := ``
+	j, err := sjson.SetRaw(j, "response", `{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}`)
+	assert.Nil(t, err)
+	t.Log(jsonIterator.Get([]byte(j), "response", "studentList", 0, "id").GetInterface())
 }
