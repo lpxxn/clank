@@ -10,7 +10,7 @@ import (
 )
 
 var yamlPath string
-var version = "v0.3"
+var version = "v0.4"
 
 func init() {
 	flag.StringVar(&yamlPath, "yaml", "serv.yaml", "path to yaml file")
@@ -23,6 +23,13 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	fmt.Println(`
+╭━━━┳╮╱╱╭━━━┳━╮╱╭┳╮╭━╮
+┃╭━╮┃┃╱╱┃╭━╮┃┃╰╮┃┃┃┃╭╯
+┃┃╱╰┫┃╱╱┃┃╱┃┃╭╮╰╯┃╰╯╯
+┃┃╱╭┫┃╱╭┫╰━╯┃┃╰╮┃┃╭╮┃
+┃╰━╯┃╰━╯┃╭━╮┃┃╱┃┃┃┃┃╰╮
+╰━━━┻━━━┻╯╱╰┻╯╱╰━┻╯╰━╯`)
 	servSchema, err := internal.LoadSchemaFromYaml(yamlPath)
 	if err != nil {
 		clanklog.Fatal(err)
