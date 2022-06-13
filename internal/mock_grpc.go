@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -269,12 +270,17 @@ func (g *gRpcServer) createStreamHandler(serviceDesc grpc.ServiceDesc, methodDes
 		if err != nil {
 			return err
 		}
-		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, g.getJBody(ctx))
+		jBody := g.getJBody(ctx)
+		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, jBody)
 		clanklog.Info(string(outputJson))
 		if err := dynamicOutput.UnmarshalJSON([]byte(outputJson)); err != nil {
 			return err
 		}
-
+		jBody, err = sjson.SetRaw(jBody, "response", string(outputJson))
+		if err != nil {
+			clanklog.Errorf("commonHandler sjson.Set error: %s", err.Error())
+		}
+		defer g.makeHttpCallback(serviceDesc, methodDesc, jBody)
 		return stream.SendMsg(dynamicOutput)
 	}
 }
@@ -395,7 +401,11 @@ func keysInterfaceSlice(k string) []interface{} {
 	keys := strings.Split(k, ".")
 	var keyList []interface{}
 	for _, v := range keys {
-		keyList = append(keyList, v)
+		if i, err := strconv.Atoi(v); err != nil {
+			keyList = append(keyList, v)
+		} else {
+			keyList = append(keyList, i)
+		}
 	}
 	clanklog.Info("keyList", keyList)
 	return keyList
