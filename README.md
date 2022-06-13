@@ -26,6 +26,13 @@ git clone git@github.com:lpxxn/clank.git
 cd clank
 make build
 ```
+
+## run clank
+in the example directory run `clank` 
+```
+CLANK_LOG_LEVEL=info clank --yaml grpc_serv.yaml
+```
+![run clank](/asset/clank_run.png)
 ## mock rpc server
 in the example directory, you can run the following command to mock rpc server
 
