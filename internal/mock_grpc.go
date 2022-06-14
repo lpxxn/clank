@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -296,18 +295,10 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 			_ = unaryMethod
 			msgFactory := dynamic.NewMessageFactoryWithDefaults()
 			inputParam := msgFactory.NewMessage(unaryMethod.methodDescriptor.GetInputType())
-
-			clanklog.Info(json.Marshal(inputParam)) // {}
 			dynamicMsg, err := dynamic.AsDynamicMessage(inputParam)
 			if err != nil {
 				return err
 			}
-			jsonBody, err := dynamicMsg.MarshalJSON()
-			if err != nil {
-				return err
-			}
-			clanklog.Info(string(jsonBody))
-
 			for _, v := range conditionParameters {
 				if !strings.Contains(v, ".") {
 					if _, err := dynamicMsg.TryGetFieldByName(v); err != nil {
