@@ -172,15 +172,15 @@ func (g *gRpcServer) methodDesc(servDescriptor *desc.ServiceDescriptor) *gRpcSer
 
 func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, methodDesc *desc.MethodDescriptor) func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	return func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-		clanklog.Info(serviceDesc.ServiceName)
-		clanklog.Info(methodDesc.GetName())
-		clanklog.Info(srv)
+		clanklog.Infof("servName: %s", serviceDesc.ServiceName)
+		clanklog.Infof("methodName: %s", methodDesc.GetName())
+		clanklog.Infof("serv: %+v", srv)
 		msgFactory := dynamic.NewMessageFactoryWithDefaults()
 		inputParam := msgFactory.NewMessage(methodDesc.GetInputType())
 		if err := dec(inputParam); err != nil {
 			return nil, err
 		}
-		clanklog.Info(inputParam.String())
+		clanklog.Infof("inputParam: %s", inputParam.String())
 
 		outPut := msgFactory.NewMessage(methodDesc.GetOutputType())
 		dynamicOutput, err := dynamic.AsDynamicMessage(outPut)
@@ -201,7 +201,7 @@ func (g *gRpcServer) createUnaryServerHandler(serviceDesc grpc.ServiceDesc, meth
 
 		jBody, err = sjson.SetRaw(jBody, "response", string(outputJson))
 		if err != nil {
-			clanklog.Errorf("commonHandler sjson.Set error: %s", err.Error())
+			clanklog.Errorf("commonHandler sJson.Set error: %s", err.Error())
 		}
 		defer g.makeHttpCallback(serviceDesc, methodDesc, jBody)
 		return dynamicOutput, nil
@@ -252,8 +252,8 @@ func (g *gRpcServer) createStreamHandler(serviceDesc grpc.ServiceDesc, methodDes
 	return func(srv interface{}, stream grpc.ServerStream) error {
 		isServerStream := methodDesc.IsServerStreaming()
 		isClientStream := methodDesc.IsClientStreaming()
-		clanklog.Info(isServerStream)
-		clanklog.Info(isClientStream)
+		clanklog.Infof("isServerStream: %t", isServerStream)
+		clanklog.Infof("isClientStream: %t", isClientStream)
 		ctx := stream.Context()
 		msgFactory := dynamic.NewMessageFactoryWithDefaults()
 		inputType := methodDesc.GetInputType()
@@ -261,7 +261,7 @@ func (g *gRpcServer) createStreamHandler(serviceDesc grpc.ServiceDesc, methodDes
 		if err := stream.RecvMsg(inputParam); err != nil {
 			return err
 		}
-		clanklog.Info(inputParam.String())
+		clanklog.Infof("inputParam: %s", inputParam.String())
 
 		ctx = g.setRequestJBody(ctx, inputParam)
 
@@ -272,7 +272,7 @@ func (g *gRpcServer) createStreamHandler(serviceDesc grpc.ServiceDesc, methodDes
 		}
 		jBody := g.getJBody(ctx)
 		outputJson, err := g.GetOutputJson(serviceDesc, methodDesc, jBody)
-		clanklog.Info(string(outputJson))
+		clanklog.Infof("output: %s", string(outputJson))
 		if err := dynamicOutput.UnmarshalJSON([]byte(outputJson)); err != nil {
 			return err
 		}
@@ -322,7 +322,6 @@ func (g *gRpcServer) ValidateSchemaMethod(serverSchema *GrpcServerDescription) e
 			_ = streamMethod
 			continue
 		}
-		//return fmt.Errorf("invalid method name %s", item.Name)
 	}
 	return nil
 }
