@@ -10,7 +10,7 @@ import (
 )
 
 var yamlPath string
-var version = "v0.4"
+var version = "v0.1.0"
 
 func init() {
 	flag.StringVar(&yamlPath, "yaml", "serv.yaml", "path to yaml file")
