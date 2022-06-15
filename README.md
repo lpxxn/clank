@@ -33,6 +33,11 @@ in the example directory run `clank`
 CLANK_LOG_LEVEL=info clank --yaml grpc_serv.yaml
 ```
 ![run clank](/asset/clank_run.png)
+
+## run in docker
+```
+docker run --rm -v $(pwd):$(pwd) -v $GOPATH:$GOPATH -w $(pwd) -p 54312:54312 lpxxn/clank:v0.1.0 --yaml ./grpc_serv.yaml 
+```
 ## mock rpc server
 in the example directory, you can run the following command to mock rpc server
 
