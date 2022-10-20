@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/go-cmp/cmp"
@@ -50,6 +51,7 @@ func NewHttpServer(desc *httpServerDescriptor) *httpServer {
 }
 
 func (h *httpServer) MethodHandler() error {
+	h.engine.Use((cors.Default()))
 	h.engine.NoRoute(h.NotFoundHandler)
 	h.engine.NoMethod(h.NotFoundHandler)
 	for path, method := range h.serverMethod {
