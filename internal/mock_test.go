@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -290,4 +291,40 @@ func TestJson1(t *testing.T) {
 	j, err := sjson.SetRaw(j, "response", `{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}`)
 	assert.Nil(t, err)
 	t.Log(jsonIterator.Get([]byte(j), "response", "studentList", 0, "id").GetInterface())
+
+	a := ``
+	j1, err := sjson.Set(a, "", `{"studentList": [{"id":111,"name":"abc","age":1298498081},{"id":222,"name":"def","age":2019727887}]}`)
+	assert.Nil(t, err)
+	t.Log(j1)
+}
+
+func TestA(t *testing.T) {
+	a1 := &A{Name: "li", Age: 10}
+	t1 := Template{T1: a1, Code: "OK", Msg: "success"}
+
+	b, _ := json.Marshal(t1)
+	t.Log(string(b))
+}
+
+type T1 interface {
+}
+
+type A struct {
+	Name string
+	Age  int
+}
+
+type Template struct {
+	Code string
+	Msg  string
+	T1
+}
+
+func (t Template) MarshalJSON() ([]byte, error) {
+	t1Json, err := json.Marshal(t.T1)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := sjson.Set(string(t1Json), "code", t.Code)
+	return []byte(rev), err
 }
