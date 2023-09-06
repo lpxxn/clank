@@ -7,3 +7,7 @@ docker-build:
 	docker build -t lpxxn/clank:$(GIT_TAG) -f Dockerfile .
 docker-build-latest:
 	docker build -t lpxxn/clank:latest -f Dockerfile .
+
+docker-buildx-latest:
+	docker buildx build --platform linux/amd64,linux/arm64 -t lpxxn/clank:latest -f Dockerfile .
+
